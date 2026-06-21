@@ -1,0 +1,51 @@
+name: SupplyVision AI - CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository code
+      uses: actions/checkout@v4
+
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
+
+    - name: Set up Node.js 18
+      uses: actions/setup-node@v4
+      with:
+        node-version: "18"
+
+    # Backend lint & setup check
+    - name: Install backend dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r backend/requirements.txt
+
+    - name: Verify backend syntax & imports
+      run: |
+        python -m py_compile backend/app/main.py
+
+    # Frontend build verification
+    - name: Install frontend dependencies
+      run: |
+        cd frontend
+        npm install
+
+    - name: Build Next.js project
+      run: |
+        cd frontend
+        npm run build
+
+    # Docker validation
+    - name: Verify Docker Compose config
+      run: |
+        docker compose config
