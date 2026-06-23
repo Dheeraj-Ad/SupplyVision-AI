@@ -8,13 +8,11 @@ import { useAuth } from "@/context/auth-context";
 import {
   BellRing,
   AlertTriangle,
-  Coins,
   ShieldCheck,
   CheckCircle2,
   Phone,
   BookOpen,
-  Info,
-  ExternalLink
+  Cpu
 } from "lucide-react";
 
 export default function AlertCenter() {
@@ -25,6 +23,7 @@ export default function AlertCenter() {
   const [alerts, setAlerts] = useState<any[]>([]);
   const [selectedAlert, setSelectedAlert] = useState<any | null>(null);
   const [recoveryPlan, setRecoveryPlan] = useState<any | null>(null);
+  const [riskDetails, setRiskDetails] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
@@ -53,9 +52,18 @@ export default function AlertCenter() {
   const handleSelectAlert = async (alert: any) => {
     setSelectedAlert(alert);
     setRecoveryPlan(null);
+    setRiskDetails(null);
     setSuccess("");
     setError("");
-    
+
+    // Fetch AI risk explanation for the alert's node
+    try {
+      const details = await request("GET", `/risks/scores/${alert.node_id}`);
+      setRiskDetails(details);
+    } catch (e) {
+      console.error("Could not fetch AI risk details", e);
+    }
+
     // Fetch recovery plans for this alert (blocked for WAREHOUSE_STAFF)
     if (user?.role !== "warehouse_staff") {
       try {
@@ -280,7 +288,59 @@ export default function AlertCenter() {
               )}
             </div>
 
-            {/* Part 2: WhatsApp notification Emulator */}
+            {/* Part 2: AI Risk Explanation */}
+            {riskDetails && (
+              <div className="bg-[#0f172a] border border-slate-800 p-6 rounded-2xl space-y-4">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                  <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                    <Cpu className="h-4 w-4 text-violet-400" />
+                    <span>AI Risk Analysis</span>
+                  </h3>
+                  <span className={`text-[10px] font-mono px-2 py-0.5 rounded border ${
+                    riskDetails.ai_powered
+                      ? "bg-violet-950/30 text-violet-400 border-violet-900/40"
+                      : "bg-slate-950 text-slate-500 border-slate-800"
+                  }`}>
+                    {riskDetails.ai_powered ? "⚡ CLAUDE AI" : "RULE-BASED"}
+                  </span>
+                </div>
+
+                <p className="text-sm text-slate-300 leading-relaxed">
+                  {riskDetails.explanation}
+                </p>
+
+                {riskDetails.breakdown && (
+                  <div className="grid grid-cols-2 gap-3 pt-1">
+                    {[
+                      { key: "weather_score",    label: "Weather",    color: "bg-blue-500"    },
+                      { key: "dependency_score", label: "Dependency", color: "bg-amber-500"   },
+                      { key: "port_score",       label: "Port",       color: "bg-red-500"     },
+                      { key: "inventory_score",  label: "Inventory",  color: "bg-emerald-500" },
+                    ].map(({ key, label, color }) => {
+                      const val = riskDetails.breakdown[key] ?? 0;
+                      return (
+                        <div key={key} className="space-y-1">
+                          <div className="flex justify-between text-[10px] font-mono text-slate-500">
+                            <span>{label}</span>
+                            <span>{val}/100</span>
+                          </div>
+                          <div className="h-1.5 rounded-full bg-slate-800">
+                            <div className={`h-1.5 rounded-full ${color} transition-all`} style={{ width: `${val}%` }} />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                <div className="flex justify-between text-[10px] font-mono text-slate-600 pt-1 border-t border-slate-800/60">
+                  <span>Confidence: {riskDetails.confidence}%</span>
+                  <span>Data age: ≤{riskDetails.data_freshness_hours}h</span>
+                </div>
+              </div>
+            )}
+
+            {/* Part 3: WhatsApp notification Emulator */}
             <div className="bg-[#0f172a] border border-slate-800 p-6 rounded-2xl space-y-4">
               <h3 className="text-sm font-bold text-white flex items-center gap-2 border-b border-slate-800 pb-2">
                 <Phone className="h-4.5 w-4.5 text-emerald-400" />
@@ -295,7 +355,7 @@ export default function AlertCenter() {
               </div>
             </div>
 
-            {/* Part 3: Recovery Options Acceptance */}
+            {/* Part 4: Recovery Options Acceptance */}
             {user?.role !== "warehouse_staff" && recoveryPlan && (
               <div className="bg-[#0f172a] border border-slate-800 p-6 rounded-2xl space-y-4">
                 <h3 className="font-bold text-white border-b border-slate-800 pb-2">Contingency Recovery Action</h3>
