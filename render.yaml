@@ -13,6 +13,6 @@ services:
       - key: SECURE_COOKIES
         value: "true"
       - key: DATABASE_URL
-        value: postgresql://postgres:BML%40123CDV%24@db.seyspklgzlsnosshqtes.supabase.co:5432/postgres
+        sync: false
       - key: BACKEND_CORS_ORIGINS
         value: "*"
