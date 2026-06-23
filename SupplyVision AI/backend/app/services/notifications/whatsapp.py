@@ -3,6 +3,7 @@ import urllib.parse
 import base64
 import json
 import logging
+from datetime import datetime
 from app.core.config import settings
 
 logger = logging.getLogger("whatsapp_notifications")
@@ -70,7 +71,8 @@ def send_risk_alert_whatsapp(to_number: str, node_name: str, risk_score: int, se
         f"Severity: {severity_stars} ({severity}/5)\n"
         f"Risk Score: *{risk_score}/100*\n"
         f"Estimated Revenue Exposure: *₹{rupees_at_risk:,.2f}*\n\n"
-        f"Action Required: Please log in to the dashboard to review and approve the recommended recovery route."
+        f"Action Required: Reply *approve 1* to activate the top recovery plan, "
+        f"or *status* to see full details. Reply *help* for all commands."
     )
     return send_whatsapp_message(to_number, message)
 

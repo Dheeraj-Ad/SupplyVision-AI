@@ -2,7 +2,7 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
-from app.core.database import get_db, AuditLog
+from app.core.database import get_db, AuditLog, Organisation
 from app.models.rbac import require_role, Role
 from app.models.schemas import SupplierCreate, SupplierResponse, RouteCreate
 from app.services.graph import graph_service
@@ -26,7 +26,20 @@ def add_supplier(
     db: Session = Depends(get_db)
 ):
     org_id = current_user["org_id"]
-    
+
+    # Gap 6: Enforce plan-based supplier tier limits
+    org = db.query(Organisation).filter(Organisation.id == org_id).first()
+    existing_suppliers = graph_service.get_suppliers(org_id)
+    max_allowed = org.max_suppliers if org else 25
+    if len(existing_suppliers) >= max_allowed:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=(
+                f"Supplier limit reached. Your current plan allows a maximum of "
+                f"{max_allowed} suppliers. Please contact your administrator to upgrade."
+            ),
+        )
+
     # Generate unique node_id
     supplier_id = f"supplier_{uuid.uuid4().hex[:8]}"
     

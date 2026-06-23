@@ -22,6 +22,7 @@ from app.api.v1.admin import router as admin_router
 from app.api.v1.reports import router as reports_router
 from app.api.v1.replay import router as replay_router
 from app.api.v1.roi import router as roi_router
+from app.api.v1.whatsapp_webhook import router as whatsapp_router
 
 
 # Setup logger configuration
@@ -211,6 +212,7 @@ app.include_router(admin_router,     prefix=f"{settings.API_V1_STR}/admin",     
 app.include_router(reports_router,   prefix=f"{settings.API_V1_STR}/reports",    tags=["Compliance Reports Center"])
 app.include_router(replay_router,    prefix=f"{settings.API_V1_STR}/replay",     tags=["Historical Replay Engine"])
 app.include_router(roi_router,       prefix=f"{settings.API_V1_STR}/roi",        tags=["ROI Analytics Dashboard"])
+app.include_router(whatsapp_router,  prefix=f"{settings.API_V1_STR}/whatsapp",   tags=["WhatsApp Two-Way Interface"])
 
 
 @app.get("/", tags=["Health"])

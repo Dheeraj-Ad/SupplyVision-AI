@@ -57,22 +57,42 @@ def run_simulation(
     
     # Calculate revenue exposure
     total_exposed_value = sum(o.get("value_inr", 0) for o in exposed_orders)
-    
-    # Calculate mock risk score for simulation
-    # High severity = high score
-    simulated_risk_score = min(100, int(request.severity * 20 + 15))
-    
-    # Create simulated weather/news signals for attribution
+
+    # Gap 7: Build simulated signals first so the real risk engine can score them
+    scenario_type = (
+        "weather" if request.scenario in ("cyclone", "flood")
+        else "port" if request.scenario == "port_strike"
+        else "news"
+    )
     simulated_signals = [
         {
-            "type": "weather" if request.scenario in ["cyclone", "flood"] else "port" if request.scenario == "port_strike" else "news",
+            "type": scenario_type,
             "source": "Simulation Engine",
             "event": f"Simulated {request.scenario.replace('_', ' ').title()} Alert (Severity {request.severity}/5)",
             "intensity": request.severity,
             "distance_km": 100,
-            "eta_hours": 24
+            "eta_hours": 24,
+            "congestion_pct": request.severity * 18 if scenario_type == "port" else 0,
+            "strike_active": scenario_type == "port" and request.severity >= 3,
+            "recent_delays": float(request.severity) if scenario_type == "port" else 0.0,
         }
     ]
+
+    # Score with the real risk engine (falls back to severity formula on any error)
+    try:
+        simulated_risk_score, _ = signals_service.compute_composite_risk(target_node, simulated_signals)
+    except Exception:
+        simulated_risk_score = min(100, int(request.severity * 20 + 15))
+
+    # Estimate delay days: 2 days per severity level + half the route transit time
+    delay_days: float = float(request.severity * 2)
+    for edge in graph_data.get("edges", []):
+        if edge.get("source") == target_id or edge.get("target") == target_id:
+            transit = edge.get("avg_transit_days") or 0
+            if transit:
+                delay_days += transit / 2.0
+                break
+    delay_days = round(delay_days, 1)
     
     # 3. Generate recovery plans
     options = recovery_engine.generate_recovery_plan(
@@ -142,12 +162,12 @@ def run_simulation(
         )
         db.add(audit_entry)
         db.commit()
-        
+
         injected_alert_id = str(new_alert.id)
-        
+
         # Propagate the updated risk score back to the graph node
         graph_service.update_risk_score(org_id, target_id, simulated_risk_score)
-        
+
     return {
         "scenario": request.scenario,
         "location_name": request.location_name,
@@ -156,6 +176,7 @@ def run_simulation(
         "exposed_orders": exposed_orders,
         "total_exposed_value_inr": total_exposed_value,
         "simulated_risk_score": simulated_risk_score,
+        "delay_days": delay_days,
         "recovery_options": options,
         "injected": inject,
         "injected_alert_id": injected_alert_id
