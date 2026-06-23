@@ -19,10 +19,16 @@ import {
   PlayCircle,
   TrendingUp,
   History,
-  Sparkles
+  Sparkles,
+  X
 } from "lucide-react";
 
-export default function Sidebar() {
+interface SidebarProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const { user, logout } = useAuth();
   const pathname = usePathname();
   
@@ -77,12 +83,43 @@ export default function Sidebar() {
   const isOffline = isOfflineFallbackActive();
 
   return (
-    <div className="w-64 bg-[#0f172a] border-r border-slate-800 flex flex-col h-screen shrink-0 text-slate-300">
+    <>
+      {/* Mobile backdrop overlay — tapping it closes the sidebar */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/60 lg:hidden"
+          onClick={onClose}
+          aria-hidden="true"
+        />
+      )}
+
+      <div
+        className={[
+          /* always-on styling */
+          "w-64 bg-[#0f172a] border-r border-slate-800 flex flex-col h-screen shrink-0 text-slate-300",
+          /* mobile: fixed off-screen; desktop: in normal flow */
+          "fixed lg:relative inset-y-0 left-0 z-50 lg:z-auto",
+          /* slide animation */
+          "transition-transform duration-300 ease-in-out",
+          /* mobile hidden/shown; desktop always visible */
+          isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
+        ].join(" ")}
+      >
       {/* Header logo */}
       <div className="p-6 border-b border-slate-800 flex flex-col space-y-1 bg-[#090d16]">
-        <div className="flex items-center space-x-2">
-          <div className="w-2 h-2 rounded-full bg-accent animate-pulse"></div>
-          <span className="font-bold text-white text-lg tracking-tight">SupplyVision AI</span>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <div className="w-2 h-2 rounded-full bg-accent animate-pulse"></div>
+            <span className="font-bold text-white text-lg tracking-tight">SupplyVision AI</span>
+          </div>
+          {/* Close button — only visible on mobile */}
+          <button
+            onClick={onClose}
+            className="lg:hidden p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            aria-label="Close navigation"
+          >
+            <X className="h-4 w-4" />
+          </button>
         </div>
         <span className="text-[10px] font-mono text-slate-500 tracking-widest uppercase">Decision Node</span>
       </div>
@@ -123,6 +160,7 @@ export default function Sidebar() {
             <Link
               key={item.path}
               href={item.path}
+              onClick={onClose}
               className={`flex items-center space-x-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
                 isActive
                   ? "bg-accent/15 text-white border border-accent/25 shadow-lg shadow-accent/5"
@@ -147,5 +185,6 @@ export default function Sidebar() {
         </button>
       </div>
     </div>
+    </>
   );
 }

@@ -49,7 +49,7 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <div className="bg-[#0f172a]/80 backdrop-blur-xl border border-slate-800 p-8 rounded-3xl shadow-2xl relative overflow-hidden">
+        <div className="bg-[#0f172a]/80 backdrop-blur-xl border border-slate-800 p-5 sm:p-8 rounded-3xl shadow-2xl relative overflow-hidden">
           <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-blue-500/50 to-emerald-500/50"></div>
           
           <form onSubmit={handleSubmit} className="space-y-6">
