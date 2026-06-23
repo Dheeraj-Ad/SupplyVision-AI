@@ -312,10 +312,10 @@ export default function AlertCenter() {
                 {riskDetails.breakdown && (
                   <div className="grid grid-cols-2 gap-3 pt-1">
                     {[
-                      { key: "weather_score",    label: "Weather",    color: "bg-blue-500"    },
-                      { key: "dependency_score", label: "Dependency", color: "bg-amber-500"   },
-                      { key: "port_score",       label: "Port",       color: "bg-red-500"     },
-                      { key: "inventory_score",  label: "Inventory",  color: "bg-emerald-500" },
+                      { key: "weather_risk",     label: "Weather",    color: "bg-blue-500"    },
+                      { key: "dependency_risk",  label: "Dependency", color: "bg-amber-500"   },
+                      { key: "port_risk",        label: "Port",       color: "bg-red-500"     },
+                      { key: "inventory_risk",   label: "Inventory",  color: "bg-emerald-500" },
                     ].map(({ key, label, color }) => {
                       const val = riskDetails.breakdown[key] ?? 0;
                       return (

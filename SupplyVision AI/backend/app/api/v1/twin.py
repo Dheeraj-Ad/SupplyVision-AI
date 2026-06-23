@@ -84,13 +84,20 @@ def run_simulation(
     except Exception:
         simulated_risk_score = min(100, int(request.severity * 20 + 15))
 
-    # Estimate delay days: 2 days per severity level + half the route transit time
+    # Estimate delay days: 2 days per severity level + half the connected route's transit time.
+    # avg_transit_days lives on Route NODES, not on links — find connected Route nodes.
     delay_days: float = float(request.severity * 2)
-    for edge in graph_data.get("edges", []):
-        if edge.get("source") == target_id or edge.get("target") == target_id:
-            transit = edge.get("avg_transit_days") or 0
+    all_links = graph_data.get("links", [])
+    connected_node_ids = {
+        lnk["target"] for lnk in all_links if lnk.get("source") == target_id
+    } | {
+        lnk["source"] for lnk in all_links if lnk.get("target") == target_id
+    }
+    for node in nodes:
+        if node.get("label") == "Route" and node.get("id") in connected_node_ids:
+            transit = node.get("avg_transit_days") or 0
             if transit:
-                delay_days += transit / 2.0
+                delay_days += float(transit) / 2.0
                 break
     delay_days = round(delay_days, 1)
     

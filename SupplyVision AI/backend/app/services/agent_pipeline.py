@@ -70,7 +70,7 @@ def intelligence_agent(state: PipelineState) -> PipelineState:
             for s in rows
         ]
 
-        msg = f"IntelligenceAgent: ingestion complete — {len(raw)} signal(s) in last 24h"
+        msg = f"IntelligenceAgent: ingestion complete - {len(raw)} signal(s) in last 24h"
         logger.info(msg)
         return {**state, "raw_signals": raw, "log": state["log"] + [msg]}
 
@@ -133,7 +133,7 @@ def risk_analysis_agent(state: PipelineState) -> PipelineState:
     for node in nodes:
         try:
             score, breakdown = signals_service.compute_composite_risk(node, typed_signals)
-            graph_service.update_risk_score(node["id"], score)
+            graph_service.update_risk_score(state["org_id"], node["id"], score)
 
             assessment = {
                 "node_id": node["id"],
@@ -148,7 +148,7 @@ def risk_analysis_agent(state: PipelineState) -> PipelineState:
         except Exception as exc:
             logger.warning(f"RiskAnalysisAgent: scoring failed for {node.get('id')}: {exc}")
 
-    msg = f"RiskAnalysisAgent: {len(nodes)} node(s) scored — {len(high_risk)} high-risk (≥60)"
+    msg = f"RiskAnalysisAgent: {len(nodes)} node(s) scored - {len(high_risk)} high-risk (>=60)"
     logger.info(msg)
     return {
         **state,
