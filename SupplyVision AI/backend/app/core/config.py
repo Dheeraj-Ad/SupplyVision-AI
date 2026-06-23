@@ -35,8 +35,9 @@ class Settings(BaseSettings):
     TWILIO_AUTH_TOKEN: Optional[str] = None
     TWILIO_NUMBER: Optional[str] = None
     
-    # OpenAI/Claude
+    # OpenAI / Anthropic Claude
     OPENAI_API_KEY: Optional[str] = None
+    ANTHROPIC_API_KEY: Optional[str] = None
     
     # External feeds keys
     OPENWEATHER_API_KEY: Optional[str] = None

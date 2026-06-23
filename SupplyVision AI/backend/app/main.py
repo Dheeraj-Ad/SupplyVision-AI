@@ -68,29 +68,51 @@ import asyncio
 from app.core.database import SessionLocal
 
 async def schedule_periodic_ingestion():
-    # Wait 10 seconds after startup before running first ingestion so the app is fully ready
-    await asyncio.sleep(10)
-    logger.info("Starting background periodic ingestion worker...")
+    """
+    Background task that runs the full LangGraph multi-agent pipeline every hour.
+
+    Pipeline: IntelligenceAgent → RiskAnalysisAgent → ImpactAgent → RecoveryAgent
+
+    Falls back to sequential execution when langgraph is not installed.
+    Runs once per active organisation in the database.
+    """
+    await asyncio.sleep(10)  # let startup finish before first run
+    logger.info("Background pipeline worker started.")
+
+    loop = asyncio.get_event_loop()
+
     while True:
         try:
-            from app.services.ingestion.weather import ingest_all_weather
-            from app.services.ingestion.news import ingest_all_news
-            from app.services.ingestion.commodities import ingest_all_commodities
-            from app.services.ingestion.ports import ingest_all_ports
-            
+            from app.services.agent_pipeline import run_pipeline
+            from app.services.ai_service import ai_service
+
+            # Fetch all active organisations
             db = SessionLocal()
             try:
-                ingest_all_weather(db)
-                ingest_all_news(db)
-                ingest_all_commodities(db)
-                ingest_all_ports(db)
-                logger.info("Periodic background ingestion completed successfully.")
+                from app.core.database import Organisation
+                orgs = db.query(Organisation).filter_by(is_active=True).all()
             finally:
                 db.close()
-        except Exception as e:
-            logger.error(f"Periodic background ingestion error: {e}")
-        # Run every 1 hour (3600 seconds)
-        await asyncio.sleep(3600)
+
+            if not orgs:
+                logger.info("No active organisations found — skipping pipeline run.")
+            else:
+                for org in orgs:
+                    logger.info(f"Pipeline starting for org: {org.name} ({org.id})")
+                    # run_pipeline is synchronous; offload to thread pool to avoid
+                    # blocking the async event loop
+                    result = await loop.run_in_executor(None, run_pipeline, org.id)
+
+                    summary = ai_service.summarise_pipeline_run(
+                        log=result.get("log", []),
+                        alerts_created=result.get("alerts_created", 0),
+                    )
+                    logger.info(f"Pipeline summary [{org.name}]: {summary}")
+
+        except Exception as exc:
+            logger.error(f"Background pipeline error: {exc}", exc_info=True)
+
+        await asyncio.sleep(3600)  # repeat every 1 hour
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
