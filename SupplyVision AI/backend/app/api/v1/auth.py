@@ -90,7 +90,7 @@ def login(request: Request, login_data: LoginRequest, response: Response, db: Se
         value=access_token,
         httponly=True,
         secure=settings.SECURE_COOKIES,
-        samesite="lax",
+        samesite=settings.cookie_samesite,
         max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60
     )
     response.set_cookie(
@@ -98,7 +98,7 @@ def login(request: Request, login_data: LoginRequest, response: Response, db: Se
         value=refresh_token,
         httponly=True,
         secure=settings.SECURE_COOKIES,
-        samesite="lax",
+        samesite=settings.cookie_samesite,
         max_age=settings.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 3600
     )
     
@@ -173,7 +173,7 @@ def signup(request: Request, signup_data: UserCreate, response: Response, db: Se
         value=access_token,
         httponly=True,
         secure=settings.SECURE_COOKIES,
-        samesite="lax",
+        samesite=settings.cookie_samesite,
         max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60
     )
     response.set_cookie(
@@ -181,7 +181,7 @@ def signup(request: Request, signup_data: UserCreate, response: Response, db: Se
         value=refresh_token,
         httponly=True,
         secure=settings.SECURE_COOKIES,
-        samesite="lax",
+        samesite=settings.cookie_samesite,
         max_age=settings.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 3600
     )
     
@@ -279,7 +279,7 @@ def refresh(request: Request, response: Response, db: Session = Depends(get_db))
         value=access_token,
         httponly=True,
         secure=settings.SECURE_COOKIES,
-        samesite="lax",
+        samesite=settings.cookie_samesite,
         max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60
     )
     response.set_cookie(
@@ -287,7 +287,7 @@ def refresh(request: Request, response: Response, db: Session = Depends(get_db))
         value=new_refresh_token,
         httponly=True,
         secure=settings.SECURE_COOKIES,
-        samesite="lax",
+        samesite=settings.cookie_samesite,
         max_age=settings.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 3600
     )
     

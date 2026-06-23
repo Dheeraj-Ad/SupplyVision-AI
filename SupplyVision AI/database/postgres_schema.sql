@@ -27,7 +27,11 @@ CREATE TABLE IF NOT EXISTS users (
     preferred_lang VARCHAR(10) NOT NULL DEFAULT 'en', -- en | hi
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    last_login_at TIMESTAMPTZ
+    last_login_at TIMESTAMPTZ,
+    failed_login_attempts INTEGER NOT NULL DEFAULT 0,
+    locked_until TIMESTAMPTZ,
+    password_reset_token VARCHAR(255),
+    password_reset_expires TIMESTAMPTZ
 );
 
 -- Index for authentication email lookup
@@ -82,3 +86,31 @@ CREATE TABLE IF NOT EXISTS audit_log (
 
 CREATE INDEX IF NOT EXISTS idx_audit_org ON audit_log(org_id);
 CREATE INDEX IF NOT EXISTS idx_audit_created ON audit_log(created_at DESC);
+
+-- Refresh Tokens Table
+CREATE TABLE IF NOT EXISTS refresh_tokens (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    jti VARCHAR(255) UNIQUE NOT NULL,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    expires_at TIMESTAMPTZ NOT NULL,
+    revoked BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_refresh_tokens_jti ON refresh_tokens(jti);
+CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user ON refresh_tokens(user_id);
+CREATE INDEX IF NOT EXISTS idx_refresh_tokens_expires ON refresh_tokens(expires_at);
+
+-- Signal Events Table
+CREATE TABLE IF NOT EXISTS signal_events (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    source VARCHAR(100) NOT NULL,
+    timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    confidence INTEGER NOT NULL DEFAULT 100,
+    severity INTEGER NOT NULL DEFAULT 1,
+    location VARCHAR(255) NOT NULL,
+    affected_nodes JSONB NOT NULL DEFAULT '[]',
+    raw_data JSONB
+);
+
+CREATE INDEX IF NOT EXISTS idx_signal_events_timestamp ON signal_events(timestamp DESC);

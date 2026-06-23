@@ -140,9 +140,38 @@ async def add_security_headers(request: Request, call_next):
 
 
 # Set CORS middleware origins
+# If allow_credentials is True, Starlette forbids '*' in allow_origins.
+# We convert wildcard origins to regex to allow credentials.
+import re
+cors_origins = [str(origin) for origin in settings.BACKEND_CORS_ORIGINS]
+allow_origins = []
+allow_origin_regex = None
+
+if "*" in cors_origins:
+    # Match any http/https origin
+    allow_origin_regex = r"^https?://.*$"
+else:
+    # Filter out any origins containing wildcards and convert them to regexes,
+    # and put exact origins in allow_origins
+    exact_origins = []
+    regex_parts = []
+    for origin in cors_origins:
+        if "*" in origin:
+            # Convert wildcard (e.g. https://*.vercel.app) to regex
+            # Escape regex characters except *
+            escaped = re.escape(origin).replace(r"\*", r".*")
+            regex_parts.append(f"^{escaped}$")
+        else:
+            exact_origins.append(origin)
+    
+    allow_origins = exact_origins
+    if regex_parts:
+        allow_origin_regex = "|".join(regex_parts)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.BACKEND_CORS_ORIGINS,
+    allow_origins=allow_origins,
+    allow_origin_regex=allow_origin_regex,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

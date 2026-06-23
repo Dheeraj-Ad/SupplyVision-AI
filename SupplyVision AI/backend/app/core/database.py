@@ -17,12 +17,29 @@ if not db_url:
     db_path = os.path.join(workspace_db_dir, "supplyvision.db")
     db_url = f"sqlite:///{db_path}"
 
+# Supabase and some providers return 'postgres://' which SQLAlchemy 1.4+ doesn't accept.
+# Auto-convert to 'postgresql://'
+if db_url.startswith("postgres://"):
+    db_url = db_url.replace("postgres://", "postgresql://", 1)
+
 # For SQLite, enable check_same_thread fallback
 connect_args = {}
 if db_url.startswith("sqlite"):
     connect_args = {"check_same_thread": False}
 
-engine = create_engine(db_url, connect_args=connect_args)
+# Build engine kwargs based on database type
+engine_kwargs = {
+    "connect_args": connect_args,
+}
+
+# Add connection pool settings for PostgreSQL (production)
+if not db_url.startswith("sqlite"):
+    engine_kwargs["pool_pre_ping"] = True
+    engine_kwargs["pool_size"] = 5
+    engine_kwargs["max_overflow"] = 10
+    engine_kwargs["pool_recycle"] = 300
+
+engine = create_engine(db_url, **engine_kwargs)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 

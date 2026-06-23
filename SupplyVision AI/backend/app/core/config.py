@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
     MAX_LOGIN_ATTEMPTS: int = 5
     LOCKOUT_MINUTES: int = 15
-    SECURE_COOKIES: bool = False  # Set to True in production
+    SECURE_COOKIES: bool = False  # Set to True in production (Railway env var)
     JWT_COOKIE_NAME: str = "access_token"
     REFRESH_COOKIE_NAME: str = "refresh_token"
     
@@ -44,8 +44,16 @@ class Settings(BaseSettings):
     # Sentry SDK DSN
     SENTRY_DSN: Optional[str] = None
     
-    # CORS Origins
+    # CORS Origins — accepts a comma-separated string from env or a JSON list
+    # Example env: BACKEND_CORS_ORIGINS=https://myapp.vercel.app,https://www.myapp.com
     BACKEND_CORS_ORIGINS: List[str] = ["*"]
+    
+    @property
+    def cookie_samesite(self) -> str:
+        """Return 'none' for cross-domain (production) or 'lax' for same-domain (dev)."""
+        if self.SECURE_COOKIES:
+            return "none"
+        return "lax"
     
     class Config:
         case_sensitive = True
@@ -60,5 +68,17 @@ class Settings(BaseSettings):
             env_file = ".env.development"
         else:
             env_file = ".env"
+        
+        @classmethod
+        def parse_env_var(cls, field_name: str, raw_val: str):
+            """Parse BACKEND_CORS_ORIGINS from comma-separated string."""
+            if field_name == "BACKEND_CORS_ORIGINS":
+                # Support comma-separated string: "https://a.com,https://b.com"
+                if raw_val.startswith("["):
+                    # JSON array format
+                    import json
+                    return json.loads(raw_val)
+                return [origin.strip() for origin in raw_val.split(",") if origin.strip()]
+            return raw_val
 
 settings = Settings()
