@@ -15,4 +15,4 @@ services:
       - key: DATABASE_URL
         sync: false
       - key: BACKEND_CORS_ORIGINS
-        value: "*"
+        sync: false
