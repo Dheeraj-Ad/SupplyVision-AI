@@ -1,6 +1,7 @@
 import os
+from pydantic import field_validator
 from pydantic_settings import BaseSettings
-from typing import Optional, List
+from typing import Optional, List, Any
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "SupplyVision AI"
@@ -46,7 +47,7 @@ class Settings(BaseSettings):
     
     # CORS Origins — accepts a comma-separated string from env or a JSON list
     # Example env: BACKEND_CORS_ORIGINS=https://myapp.vercel.app,https://www.myapp.com
-    BACKEND_CORS_ORIGINS: List[str] = ["*"]
+    BACKEND_CORS_ORIGINS: Any = ["*"]
     
     @property
     def cookie_samesite(self) -> str:
@@ -60,25 +61,33 @@ class Settings(BaseSettings):
         
         # Determine environment file dynamically
         app_env = os.getenv("APP_ENV", "development").lower()
-        if app_env == "production":
-            env_file = ".env.production"
-        elif app_env == "staging":
-            env_file = ".env.staging"
-        elif app_env == "development":
-            env_file = ".env.development"
-        else:
-            env_file = ".env"
+        base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         
-        @classmethod
-        def parse_env_var(cls, field_name: str, raw_val: str):
-            """Parse BACKEND_CORS_ORIGINS from comma-separated string."""
-            if field_name == "BACKEND_CORS_ORIGINS":
-                # Support comma-separated string: "https://a.com,https://b.com"
-                if raw_val.startswith("["):
-                    # JSON array format
-                    import json
-                    return json.loads(raw_val)
-                return [origin.strip() for origin in raw_val.split(",") if origin.strip()]
-            return raw_val
+        # Load .env first, then environment-specific overrides if they exist
+        env_files = []
+        dot_env_path = os.path.join(base_dir, ".env")
+        if os.path.exists(dot_env_path):
+            env_files.append(dot_env_path)
+            
+        spec_env_path = os.path.join(base_dir, f".env.{app_env}")
+        if os.path.exists(spec_env_path):
+            env_files.append(spec_env_path)
+            
+        if not env_files:
+            env_file = dot_env_path
+        else:
+            env_file = tuple(env_files)
+        
+    @field_validator("BACKEND_CORS_ORIGINS", mode="before")
+    @classmethod
+    def assemble_cors_origins(cls, v: any) -> List[str]:
+        if isinstance(v, str) and not v.startswith("["):
+            return [i.strip() for i in v.split(",") if i.strip()]
+        elif isinstance(v, (list, str)):
+            if isinstance(v, str):
+                import json
+                return json.loads(v)
+            return v
+        raise ValueError(v)
 
 settings = Settings()
