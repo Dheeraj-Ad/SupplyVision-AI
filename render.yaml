@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: supplyvision-backend
+    env: docker
+    dockerfilePath: SupplyVision AI/backend/Dockerfile
+    dockerContext: SupplyVision AI/backend
+    plan: free
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: SECRET_KEY
+        value: d344a012fcd485f8bb06626f73a522759899cf450155dff5778435c160130f19db915496b41e81b1ddeffae68166f2be0585355024d0cc5136a69e394e9aafe3
+      - key: SECURE_COOKIES
+        value: "true"
+      - key: DATABASE_URL
+        value: postgresql://postgres:BML%40123CDV%24@db.seyspklgzlsnosshqtes.supabase.co:5432/postgres
+      - key: BACKEND_CORS_ORIGINS
+        value: "*"
