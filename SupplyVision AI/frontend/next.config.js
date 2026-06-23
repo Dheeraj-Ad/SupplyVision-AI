@@ -1,6 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: "standalone",
   eslint: {
     // Don't fail the build on ESLint warnings/errors during Vercel deployment
     ignoreDuringBuilds: true,
