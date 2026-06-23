@@ -1,1 +1,9 @@
 /.agents
+
+# Environment files — never commit secrets
+.env
+.env.*
+!.env.example
+**/backend/.env
+**/backend/.env.*
+!**/backend/.env.example
