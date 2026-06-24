@@ -185,102 +185,114 @@ export default function AdminConsole() {
         </div>
       )}
 
-      {/* Grid: Health Status & Tenant List */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Tenant list table */}
-        <div className="bg-[#0f172a] border border-slate-800 p-6 rounded-2xl lg:col-span-2 space-y-4">
-          <h3 className="text-lg font-bold text-white border-b border-slate-800 pb-2">Active Tenants</h3>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-xs font-mono">
-              <thead>
-                <tr className="border-b border-slate-800 text-slate-500 uppercase tracking-wider">
-                  <th className="py-3 px-2">Name</th>
-                  <th className="py-3 px-2">GSTIN</th>
-                  <th className="py-3 px-2">Plan Details</th>
-                  <th className="py-3 px-2 text-center">Active Status</th>
-                  <th className="py-3 px-2 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-800/50 text-slate-350">
-                {orgs.map((org) => (
-                  <tr key={org.id} className="hover:bg-slate-950/10">
-                    <td className="py-3 px-2 font-sans font-semibold text-white">{org.name}</td>
-                    <td className="py-3 px-2 text-slate-400">{org.gstin || "MOCKED_GSTIN"}</td>
-                    <td className="py-3 px-2">
-                      <span className="text-[10px] bg-blue-950/50 text-accent border border-blue-900/40 px-2 py-0.5 rounded uppercase">
-                        {org.plan} ({org.max_suppliers} max)
-                      </span>
-                    </td>
-                    <td className="py-3 px-2 text-center">
-                      <span className={`inline-block w-2.5 h-2.5 rounded-full ${org.is_active ? "bg-emerald-500" : "bg-red-500"}`}></span>
-                    </td>
-                    <td className="py-3 px-2 text-right space-x-1.5 whitespace-nowrap">
+      {/* Tenant list — full width table */}
+      <div className="bg-[#0f172a] border border-slate-800 rounded-2xl space-y-4">
+        <div className="px-6 pt-6 flex items-center justify-between">
+          <h3 className="text-lg font-bold text-white">Active Tenants</h3>
+          <span className="text-xs font-mono text-slate-500">{orgs.length} organisation(s)</span>
+        </div>
+        <div className="w-full overflow-x-auto">
+          <table className="w-full min-w-[720px] text-left border-collapse text-xs font-mono">
+            <thead>
+              <tr className="border-y border-slate-800 bg-slate-950/40 text-slate-500 uppercase tracking-wider">
+                <th className="py-3 px-5 w-[220px]">Organisation</th>
+                <th className="py-3 px-4 w-[160px]">GSTIN</th>
+                <th className="py-3 px-4 w-[180px]">Plan</th>
+                <th className="py-3 px-4 w-[90px]">Suppliers</th>
+                <th className="py-3 px-4 w-[80px] text-center">Status</th>
+                <th className="py-3 px-4 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-800/50">
+              {orgs.map((org) => (
+                <tr key={org.id} className="hover:bg-slate-950/30 transition-colors">
+                  <td className="py-3.5 px-5 font-sans font-semibold text-white">{org.name}</td>
+                  <td className="py-3.5 px-4 text-slate-400">{org.gstin || "—"}</td>
+                  <td className="py-3.5 px-4">
+                    <span className="text-[10px] bg-blue-950/50 text-accent border border-blue-900/40 px-2 py-0.5 rounded uppercase tracking-wide">
+                      {org.plan}
+                    </span>
+                  </td>
+                  <td className="py-3.5 px-4 text-slate-300">{org.max_suppliers} max</td>
+                  <td className="py-3.5 px-4 text-center">
+                    <span className={`inline-flex items-center gap-1.5 text-[10px] font-semibold ${org.is_active ? "text-emerald-400" : "text-red-400"}`}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${org.is_active ? "bg-emerald-400" : "bg-red-400"}`} />
+                      {org.is_active ? "Active" : "Suspended"}
+                    </span>
+                  </td>
+                  <td className="py-3.5 px-4 text-right">
+                    <div className="flex justify-end gap-2">
                       <button
                         onClick={() => handleUpdateLimit(org.id, org.max_suppliers + 10)}
-                        className="px-2 py-1 bg-slate-950 border border-slate-800 hover:border-slate-700 text-[10px] text-slate-300 rounded"
-                        title="Extend limits"
+                        className="px-3 py-1.5 bg-slate-900 border border-slate-700 hover:border-slate-500 text-[10px] text-slate-300 hover:text-white rounded-lg transition-colors whitespace-nowrap"
                       >
                         +10 Limit
                       </button>
                       <button
                         onClick={() => handleToggleSuspend(org.id, org.is_active)}
-                        className={`px-2 py-1 rounded text-[10px] ${
+                        className={`px-3 py-1.5 rounded-lg text-[10px] font-semibold whitespace-nowrap transition-colors ${
                           org.is_active
-                            ? "bg-red-950/20 border border-red-900/30 text-red-400 hover:bg-red-950/40"
-                            : "bg-emerald-950/20 border border-emerald-900/30 text-emerald-400 hover:bg-emerald-950/40"
+                            ? "bg-red-950/30 border border-red-900/40 text-red-400 hover:bg-red-950/60"
+                            : "bg-emerald-950/30 border border-emerald-900/40 text-emerald-400 hover:bg-emerald-950/60"
                         }`}
                       >
                         {org.is_active ? "Suspend" : "Activate"}
                       </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
+      </div>
 
-        {/* Health status metrics panel */}
-        {health && (
-          <div className="bg-[#0f172a] border border-slate-800 p-6 rounded-2xl space-y-4">
-            <h3 className="text-lg font-bold text-white border-b border-slate-800 pb-2">Ingestion Health</h3>
-            
-            <div className="space-y-4 text-xs font-mono">
-              <div className="space-y-2">
-                <span className="text-slate-500 uppercase block text-[10px]">PIPELINES WORKERS</span>
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center p-2.5 bg-slate-950/60 border border-slate-850 rounded-xl">
-                    <span className="text-slate-300">IMD Weather Scraper</span>
-                    <span className="text-emerald-400">ACTIVE</span>
-                  </div>
-                  <div className="flex justify-between items-center p-2.5 bg-slate-950/60 border border-slate-850 rounded-xl">
-                    <span className="text-slate-300">GDACS Disaster Tracker</span>
-                    <span className="text-emerald-400">ACTIVE</span>
-                  </div>
-                  <div className="flex justify-between items-center p-2.5 bg-slate-950/60 border border-slate-850 rounded-xl">
-                    <span className="text-slate-300">News API LLM Tagging</span>
-                    <span className="text-emerald-400">ACTIVE</span>
-                  </div>
+      {/* Health status — cards row below the table */}
+      {health && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Pipeline workers */}
+          <div className="bg-[#0f172a] border border-slate-800 p-6 rounded-2xl space-y-3">
+            <h3 className="text-sm font-bold text-white border-b border-slate-800 pb-2 uppercase tracking-wider font-mono">
+              Pipeline Workers
+            </h3>
+            <div className="space-y-2 text-xs font-mono">
+              {[
+                "IMD Weather Scraper",
+                "GDACS Disaster Tracker",
+                "NewsAPI LLM Tagging",
+                "Port Congestion Model",
+              ].map((w) => (
+                <div key={w} className="flex justify-between items-center p-2.5 bg-slate-950/60 border border-slate-800 rounded-xl">
+                  <span className="text-slate-300">{w}</span>
+                  <span className="text-emerald-400 font-semibold">ACTIVE</span>
                 </div>
-              </div>
-
-              <div className="space-y-2 pt-2 border-t border-slate-800/80">
-                <span className="text-slate-500 uppercase block text-[10px]">DATABASE NODES</span>
-                <div className="space-y-1">
-                  <div className="flex justify-between">
-                    <span className="text-slate-400">PostgreSQL (Supabase)</span>
-                    <span className="text-emerald-400 font-semibold">CONNECTED</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-400">Neo4j (Aura Cloud)</span>
-                    <span className="text-emerald-400 font-semibold">{health.databases.neo4j.toUpperCase()}</span>
-                  </div>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
-        )}
-      </div>
+
+          {/* Database connections */}
+          <div className="bg-[#0f172a] border border-slate-800 p-6 rounded-2xl space-y-3">
+            <h3 className="text-sm font-bold text-white border-b border-slate-800 pb-2 uppercase tracking-wider font-mono">
+              System Connections
+            </h3>
+            <div className="space-y-2 text-xs font-mono">
+              {[
+                { label: "Relational DB (SQLite/Postgres)", value: "connected" },
+                { label: "Graph Twin (NetworkX/Neo4j)", value: health.databases?.neo4j || "connected" },
+                { label: "Cache (Redis / In-Memory)", value: health.cache || "local_active" },
+                { label: "AI Layer (Claude / OpenAI)", value: "active" },
+              ].map(({ label, value }) => (
+                <div key={label} className="flex justify-between items-center p-2.5 bg-slate-950/60 border border-slate-800 rounded-xl">
+                  <span className="text-slate-300">{label}</span>
+                  <span className={`font-semibold ${value.includes("connect") || value === "active" || value === "local_active" ? "text-emerald-400" : "text-red-400"}`}>
+                    {value.replace(/_/g, " ").toUpperCase()}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
