@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
 import Sidebar from "@/components/sidebar";
+import Chatbot from "@/components/chatbot";
 import { Menu } from "lucide-react";
 
 export default function DashboardLayout({
@@ -64,6 +65,9 @@ export default function DashboardLayout({
           {children}
         </div>
       </main>
+
+      {/* AI chatbot — floats over all dashboard pages */}
+      <Chatbot />
     </div>
   );
 }
