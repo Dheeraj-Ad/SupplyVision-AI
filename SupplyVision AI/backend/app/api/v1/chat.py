@@ -15,10 +15,11 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import List
 
-from app.core.database import get_db, AlertEvent
+from app.core.database import get_db, AlertEvent, User
 from app.models.rbac import require_role, Role
 from app.services.graph import graph_service
 from app.services.ai_service import ai_service
+from app.services.notifications.email import send_chatbot_digest_email
 
 router = APIRouter()
 
@@ -92,4 +93,27 @@ def chat_message(
     messages.append({"role": "user", "content": request.message})
 
     reply = ai_service.chat_completion(system_prompt, messages)
+
+    # If the user asked for an email digest, trigger it automatically
+    trigger_words = ["email me", "send me", "mail me", "send report", "email report", "send this"]
+    if any(t in request.message.lower() for t in trigger_words):
+        try:
+            user_row = db.query(User).filter(User.id == current_user.get("user_id")).first()
+            if user_row:
+                history_text = " | ".join(
+                    f"{m.role}: {m.content[:80]}" for m in request.history[-6:]
+                )
+                send_chatbot_digest_email(
+                    to_address=user_row.email,
+                    user_name=full_name,
+                    conversation_summary=history_text or request.message,
+                    key_insights=[
+                        f"{open_alerts} open alert(s) in your supply chain",
+                        f"{supplier_count} supplier(s) monitored in the digital twin",
+                        "Reply 'approve 1' on WhatsApp to activate the top recovery plan",
+                    ],
+                )
+        except Exception:
+            pass  # Non-fatal — chat still works
+
     return ChatResponse(reply=reply, ai_powered=ai_service.available)

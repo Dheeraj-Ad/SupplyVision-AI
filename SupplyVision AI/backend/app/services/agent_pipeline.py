@@ -277,6 +277,70 @@ def recovery_agent(state: PipelineState) -> PipelineState:
     finally:
         db.close()
 
+    # ── Auto-notify via Email + WhatsApp for every alert created ─────────────
+    if plans:
+        try:
+            from app.services.notifications.email import send_alert_email
+            from app.services.notifications.whatsapp import send_risk_alert_whatsapp
+            from app.core.database import User, Organisation
+
+            notify_db = SessionLocal()
+            try:
+                org = notify_db.query(Organisation).filter(
+                    Organisation.id == state["org_id"]
+                ).first()
+
+                # Target owners + operations managers for email
+                notifiable_users = notify_db.query(User).filter(
+                    User.org_id == state["org_id"],
+                    User.is_active == True,
+                    User.role.in_(["sme_owner", "operations_manager"]),
+                ).all()
+
+                to_emails = [u.email for u in notifiable_users]
+                to_whatsapp = (org.whatsapp_numbers or []) if org else []
+
+                for plan in plans:
+                    severity = max(1, plan["risk_score"] // 20)
+
+                    # WhatsApp — one message per registered number
+                    for number in to_whatsapp:
+                        try:
+                            send_risk_alert_whatsapp(
+                                to_number=number,
+                                node_name=plan["node_name"],
+                                risk_score=plan["risk_score"],
+                                severity=severity,
+                                rupees_at_risk=plan["rupees_at_risk"],
+                            )
+                        except Exception as wa_exc:
+                            logger.warning(f"WhatsApp notify failed for {number}: {wa_exc}")
+
+                    # Email — one message to all notifiable users
+                    if to_emails:
+                        try:
+                            send_alert_email(
+                                to_addresses=to_emails,
+                                node_name=plan["node_name"],
+                                risk_score=plan["risk_score"],
+                                rupees_at_risk=plan["rupees_at_risk"],
+                                alert_id=str(plan["alert_id"]),
+                                options_count=plan["options_count"],
+                            )
+                        except Exception as email_exc:
+                            logger.warning(f"Email notify failed: {email_exc}")
+
+                logger.info(
+                    f"RecoveryAgent: Notifications dispatched — "
+                    f"{len(plans)} alert(s), {len(to_emails)} email recipient(s), "
+                    f"{len(to_whatsapp)} WhatsApp number(s)"
+                )
+            finally:
+                notify_db.close()
+
+        except Exception as notify_exc:
+            logger.warning(f"RecoveryAgent: Notification dispatch error (non-fatal): {notify_exc}")
+
     msg = f"RecoveryAgent: {alerts_created} alert(s) + recovery plan(s) committed"
     logger.info(msg)
     return {

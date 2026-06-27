@@ -43,6 +43,13 @@ class Settings(BaseSettings):
     OPENWEATHER_API_KEY: Optional[str] = None
     NEWSAPI_KEY: Optional[str] = None
     
+    # Email / SMTP (Gmail, SendGrid, or any SMTP server)
+    SMTP_HOST: str = "smtp.gmail.com"
+    SMTP_PORT: int = 587
+    SMTP_USER: Optional[str] = None        # e.g. yourapp@gmail.com
+    SMTP_PASSWORD: Optional[str] = None    # Gmail App Password (not account password)
+    EMAIL_FROM: str = "noreply@supplyvision.ai"
+
     # Sentry SDK DSN
     SENTRY_DSN: Optional[str] = None
     
