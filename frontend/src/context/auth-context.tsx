@@ -119,7 +119,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     localStorage.removeItem("access_token");
     setUser(null);
-    router.push("/login");
+    router.push("/");
   };
 
   const signup = async (email: string, password: string, name: string, phone: string, lang: string) => {
