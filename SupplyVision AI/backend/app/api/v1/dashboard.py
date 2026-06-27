@@ -71,7 +71,7 @@ def get_daily_briefing(
 
     try:
         briefing = ai_service.chat_completion(
-            system_prompt=system_prompt,
+            system=system_prompt,
             messages=[{"role": "user", "content": user_message}],
         )
     except Exception:

@@ -1,14 +1,20 @@
-# pyrefly: ignore [missing-import]
-from app.core.config import settings
+import uuid
+from typing import List, Optional
+from datetime import datetime, timedelta, timezone
+
 # pyrefly: ignore [missing-import]
 from fastapi import APIRouter, Depends, HTTPException, status
 # pyrefly: ignore [missing-import]
 from sqlalchemy.orm import Session
-from typing import List
-from app.core.database import get_db, Organisation, User
+from pydantic import BaseModel, EmailStr
+
+from app.core.config import settings
+from app.core.database import get_db, Organisation, User, AlertEvent, RecoveryPlan, AuditLog
+from app.core.security import get_password_hash
 from app.models.rbac import require_role, Role
 from app.models.schemas import OrganisationResponse, OrganisationCreate, UserResponse
-
+from app.services.graph import graph_service
+from app.services.onboarding.templates import OnboardingTemplates
 from app.services.ingestion.weather import ingest_all_weather
 from app.services.ingestion.news import ingest_all_news
 from app.services.ingestion.commodities import ingest_all_commodities
@@ -241,15 +247,6 @@ def run_ingestion_jobs(
             detail=f"Ingestion pipeline failed: {str(e)}"
         )
 
-
-import uuid
-from pydantic import BaseModel, EmailStr
-from typing import Optional
-from datetime import datetime, timedelta, timezone
-from app.core.security import get_password_hash
-from app.services.onboarding.templates import OnboardingTemplates
-from app.services.graph import graph_service
-from app.core.database import AlertEvent, RecoveryPlan, AuditLog
 
 class OnboardRequest(BaseModel):
     industry: str

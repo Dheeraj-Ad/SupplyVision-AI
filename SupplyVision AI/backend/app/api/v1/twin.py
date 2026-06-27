@@ -246,7 +246,7 @@ def explain_node_risk(
 
     try:
         explanation = ai_service.chat_completion(
-            system_prompt=system_prompt,
+            system=system_prompt,
             messages=[{"role": "user", "content": user_msg}],
         )
     except Exception:
