@@ -100,10 +100,22 @@ class SignalsService:
           inventory_risk = max(0, (days_threshold - days_to_zero) / days_threshold * 100)
         """
         lbl = node_props.get("label")
+        if lbl == "Port" or lbl == "Customer":
+            return 0.0
         if lbl != "Warehouse":
-            # For supplier nodes, lookup if they are close to stockouts based on buffer estimation
-            # Default to baseline score
-            return 30.0
+            # For supplier nodes: estimate inventory risk from lead time + single-source status
+            lead_days = float(node_props.get("lead_time_days", 7.0))
+            if lead_days <= 3:
+                base = 5.0
+            elif lead_days <= 7:
+                base = 15.0
+            elif lead_days <= 14:
+                base = 28.0
+            else:
+                base = 42.0
+            if node_props.get("is_single_source"):
+                base = min(100.0, base * 1.5)
+            return base
             
         current_stock = float(node_props.get("current_stock_units", 100.0))
         daily_burn_rate = float(node_props.get("daily_burn_rate", 10.0))

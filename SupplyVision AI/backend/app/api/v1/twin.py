@@ -188,3 +188,91 @@ def run_simulation(
         "injected": inject,
         "injected_alert_id": injected_alert_id
     }
+
+
+@router.get("/node/{node_id}/explain")
+def explain_node_risk(
+    node_id: str,
+    current_user: dict = Depends(require_role(Role.AUDITOR)),
+):
+    """Return an AI-generated plain-language explanation of why this node has its current risk score."""
+    from app.services.ai_service import ai_service
+
+    org_id = current_user["org_id"]
+    graph_data = graph_service.get_graph_data(org_id)
+    nodes = graph_data.get("nodes", [])
+
+    node = next((n for n in nodes if n.get("id") == node_id), None)
+    if not node:
+        return {"explanation": "Node not found in the digital twin.", "ai_powered": False}
+
+    score = node.get("current_risk_score", 0)
+    label = node.get("label", "Node")
+    name = node.get("name") or node.get("code") or node_id
+    city = node.get("city", "")
+
+    # Build a rich context prompt
+    lead_time = node.get("lead_time_days", "")
+    single_src = node.get("is_single_source", False)
+    stock = node.get("current_stock_units", "")
+    burn = node.get("daily_burn_rate", "")
+    revenue = node.get("revenue_exposure_inr", "")
+
+    details = []
+    if lead_time:
+        details.append(f"Lead time: {lead_time} days")
+    if single_src:
+        details.append("Single source (no backup supplier)")
+    if stock:
+        details.append(f"Current stock: {stock} units")
+    if burn:
+        details.append(f"Daily burn rate: {burn} units/day")
+    if revenue:
+        details.append(f"Revenue exposure: ₹{int(revenue):,}")
+
+    detail_str = "; ".join(details) if details else "Standard supply chain node"
+
+    system_prompt = (
+        "You are SupplyVision AI. Explain a supply chain node's risk score in 2-3 plain sentences "
+        "that an Indian SME owner would understand. Be specific about what is driving the risk "
+        "and what they should do about it. Use ₹ for rupees."
+    )
+    user_msg = (
+        f"Node: {name} ({label}), located in {city or 'India'}\n"
+        f"Current risk score: {score}/100\n"
+        f"Details: {detail_str}\n\n"
+        f"Explain why this node has a risk score of {score} and what action the owner should take."
+    )
+
+    try:
+        explanation = ai_service.chat_completion(
+            system_prompt=system_prompt,
+            messages=[{"role": "user", "content": user_msg}],
+        )
+    except Exception:
+        # Rule-based fallback
+        if score >= 65:
+            explanation = (
+                f"{name} is in a CRITICAL state (score {score}/100). "
+                f"{'As a single-source supplier with no backup, any disruption will directly halt production. ' if single_src else ''}"
+                f"Activate your recovery plan immediately — switch to an alternate supplier or pre-order buffer stock."
+            )
+        elif score >= 30:
+            explanation = (
+                f"{name} shows elevated risk (score {score}/100). "
+                f"{'Long lead times of ' + str(lead_time) + ' days are increasing your vulnerability. ' if lead_time else ''}"
+                f"Review your buffer stock levels and consider pre-positioning inventory."
+            )
+        else:
+            explanation = (
+                f"{name} is operating within safe parameters (score {score}/100). "
+                f"Continue monitoring weather signals and port congestion for early warning signs."
+            )
+
+    return {
+        "node_id": node_id,
+        "node_name": name,
+        "risk_score": score,
+        "explanation": explanation,
+        "ai_powered": ai_service.available,
+    }
