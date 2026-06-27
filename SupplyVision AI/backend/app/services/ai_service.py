@@ -54,6 +54,11 @@ class AIService:
     def available(self) -> bool:
         return self._client is not None
 
+    @property
+    def provider(self) -> str:
+        """Return the active provider name: 'gemini', 'anthropic', 'openai', or 'rule-based'."""
+        return self._provider or "rule-based"
+
     # ── Public methods ────────────────────────────────────────────────────────
 
     def explain_risk(

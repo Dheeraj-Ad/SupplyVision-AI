@@ -111,7 +111,7 @@ export default function AlertCenter() {
   const getWhatsAppPayload = () => {
     if (!selectedAlert) return "";
     
-    const nodeName = selectedAlert.node_id === "supplier_1" ? "Erode Yarn Mill (S1)" : selectedAlert.node_id;
+    const nodeName = riskDetails?.name || selectedAlert.node_id;
     const score = selectedAlert.risk_score;
     const value = formatRupee(selectedAlert.rupees_at_risk);
     
@@ -191,7 +191,7 @@ export default function AlertCenter() {
                   >
                     <div className="flex justify-between items-start">
                       <span className="font-semibold text-sm text-white">
-                        {a.node_type}: {a.node_id === "supplier_1" ? "Erode Yarn Mill" : a.node_id}
+                        {a.node_type}: {a.node_id}
                       </span>
                       <span className={`text-[10px] font-mono font-semibold px-2 py-0.5 rounded ${
                         a.status === "resolved" 
@@ -301,7 +301,9 @@ export default function AlertCenter() {
                       ? "bg-violet-950/30 text-violet-400 border-violet-900/40"
                       : "bg-slate-950 text-slate-500 border-slate-800"
                   }`}>
-                    {riskDetails.ai_powered ? "⚡ CLAUDE AI" : "RULE-BASED"}
+                    {riskDetails.ai_powered
+                      ? `⚡ ${(riskDetails.ai_provider || "AI").toUpperCase()}`
+                      : "RULE-BASED"}
                   </span>
                 </div>
 

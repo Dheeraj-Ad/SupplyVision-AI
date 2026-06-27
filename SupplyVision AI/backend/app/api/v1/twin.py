@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
+from pydantic import BaseModel
 from app.core.database import get_db, AlertEvent, RecoveryPlan, AuditLog, Organisation
 from app.models.rbac import require_role, Role
 from app.models.schemas import SimulationRequest, SimulationResponse
@@ -10,6 +11,11 @@ from app.services.recovery_engine import recovery_engine
 from app.services.notifications.whatsapp import send_risk_alert_whatsapp, send_recovery_recommendation_whatsapp
 
 router = APIRouter()
+
+
+class NodePatchRequest(BaseModel):
+    current_stock_units: Optional[int] = None
+    daily_burn_rate: Optional[float] = None
 
 @router.get("/graph")
 def get_graph(
@@ -276,3 +282,27 @@ def explain_node_risk(
         "explanation": explanation,
         "ai_powered": ai_service.available,
     }
+
+
+@router.patch("/node/{node_id}")
+def patch_node_properties(
+    node_id: str,
+    body: NodePatchRequest,
+    current_user: dict = Depends(require_role(Role.WAREHOUSE_STAFF)),
+):
+    """Update writable node properties (stock levels, burn rate) and persist to the digital twin."""
+    org_id = current_user["org_id"]
+    updated = {}
+
+    if body.current_stock_units is not None:
+        graph_service.update_node_property(org_id, node_id, "current_stock_units", body.current_stock_units)
+        updated["current_stock_units"] = body.current_stock_units
+
+    if body.daily_burn_rate is not None:
+        graph_service.update_node_property(org_id, node_id, "daily_burn_rate", body.daily_burn_rate)
+        updated["daily_burn_rate"] = body.daily_burn_rate
+
+    if not updated:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No updatable fields provided.")
+
+    return {"node_id": node_id, "updated": updated, "message": "Node properties persisted to digital twin."}

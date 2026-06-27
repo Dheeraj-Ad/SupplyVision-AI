@@ -315,6 +315,20 @@ class GraphService:
                 self.nx_graph.nodes[node_id]["current_risk_score"] = risk_score
                 self._save_local_graph()
 
+    def update_node_property(self, org_id: str, node_id: str, key: str, value) -> bool:
+        """Set a single property on a node and persist. Returns True if node was found."""
+        if self.use_neo4j:
+            cypher = f"MATCH (n {{node_id: $node_id, org_id: $org_id}}) SET n.{key} = $value"
+            with self.driver.session() as session:
+                session.run(cypher, node_id=node_id, org_id=org_id, value=value)
+            return True
+        else:
+            if self.nx_graph.has_node(node_id):
+                self.nx_graph.nodes[node_id][key] = value
+                self._save_local_graph()
+                return True
+            return False
+
     # --- Get Full Graph (For UI Visualisation) ---
     def get_graph_data(self, org_id: str) -> Dict[str, Any]:
         if self.use_neo4j:

@@ -153,6 +153,7 @@ def get_node_risk_details(
         "signals_count": len(live_signals),
         "explanation": explanation,
         "ai_powered": ai_service.available,
+        "ai_provider": ai_service.provider,
         "confidence": 95 if live_signals else 40,
         "data_freshness_hours": 48,
         "timestamp": datetime.now(timezone.utc).isoformat(),

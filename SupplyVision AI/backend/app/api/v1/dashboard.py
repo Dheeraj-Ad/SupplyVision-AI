@@ -92,6 +92,7 @@ def get_daily_briefing(
     return {
         "briefing": briefing,
         "ai_powered": ai_service.available,
+        "ai_provider": ai_service.provider,
         "open_alerts": total_open,
         "high_risk_count": len(high_risk_nodes),
         "supplier_count": len(supplier_nodes),

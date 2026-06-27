@@ -46,16 +46,11 @@ export default function InventoryManagement() {
     }
 
     try {
-      // In production, submits to /inventory or updates the graph node.
-      // Since we support local mock fallback, request handles it or we mock success.
-      // Let's perform a mock success update in state to show interactivity.
-      if (warehouse) {
-        setWarehouse({
-          ...warehouse,
-          current_stock_units: count
-        });
-      }
-      setSuccess(`Physical stock levels successfully reconciled to ${count} units. Graph twin updated.`);
+      const nodeId = warehouse?.id;
+      if (!nodeId) throw new Error("Warehouse node not found.");
+      await request("PATCH", `/twin/node/${nodeId}`, { current_stock_units: count });
+      setWarehouse({ ...warehouse, current_stock_units: count });
+      setSuccess(`Physical stock reconciled to ${count} units — digital twin updated.`);
     } catch (err: any) {
       setError(err.message || "Failed to update warehouse stock.");
     }

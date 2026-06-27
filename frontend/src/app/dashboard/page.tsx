@@ -30,6 +30,7 @@ import Link from "next/link";
 interface Briefing {
   briefing: string;
   ai_powered: boolean;
+  ai_provider: string;
   open_alerts: number;
   high_risk_count: number;
   supplier_count: number;
@@ -161,7 +162,10 @@ export default function CEODashboard() {
               {briefing?.ai_powered && (
                 <span className="inline-flex items-center gap-1 text-[9px] bg-blue-950/60 border border-blue-800/50 text-blue-300 px-1.5 py-0.5 rounded font-mono">
                   <Sparkles className="h-2.5 w-2.5" />
-                  GPT-4o
+                  {briefing.ai_provider === "gemini" ? "Gemini AI"
+                    : briefing.ai_provider === "anthropic" ? "Claude AI"
+                    : briefing.ai_provider === "openai" ? "GPT-4o"
+                    : "AI"}
                 </span>
               )}
             </div>
