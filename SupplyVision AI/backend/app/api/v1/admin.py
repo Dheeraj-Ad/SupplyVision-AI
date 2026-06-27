@@ -79,6 +79,121 @@ def update_organisation_limits(
     db.commit()
     return {"message": f"Organisation supplier limit updated to {max_suppliers}."}
 
+
+# ── User Management ───────────────────────────────────────────────────────────
+
+class AdminUserCreate(BaseModel):
+    full_name: str
+    email: EmailStr
+    password: str
+    role: str
+    org_id: Optional[str] = None
+    phone_in: Optional[str] = None
+    preferred_lang: str = "en"
+
+
+@router.get("/users")
+def get_all_users(
+    current_user: dict = Depends(require_role(Role.SUPER_ADMIN)),
+    db: Session = Depends(get_db),
+):
+    """List all users across all organisations."""
+    users = db.query(User).order_by(User.created_at.desc()).all()
+    org_map = {o.id: o.name for o in db.query(Organisation).all()}
+    return [
+        {
+            "id": u.id,
+            "full_name": u.full_name,
+            "email": u.email,
+            "role": u.role,
+            "org_id": u.org_id,
+            "org_name": org_map.get(u.org_id, "—") if u.org_id else "—",
+            "phone_in": u.phone_in,
+            "preferred_lang": u.preferred_lang,
+            "is_active": u.is_active,
+            "created_at": u.created_at.isoformat() if u.created_at else None,
+            "last_login_at": u.last_login_at.isoformat() if u.last_login_at else None,
+        }
+        for u in users
+    ]
+
+
+@router.post("/users", status_code=status.HTTP_201_CREATED)
+def create_user(
+    payload: AdminUserCreate,
+    current_user: dict = Depends(require_role(Role.SUPER_ADMIN)),
+    db: Session = Depends(get_db),
+):
+    """Create a new user under any organisation (admin only)."""
+    existing = db.query(User).filter(User.email == payload.email).first()
+    if existing:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"A user with email '{payload.email}' already exists.",
+        )
+
+    if payload.org_id:
+        org = db.query(Organisation).filter(Organisation.id == payload.org_id).first()
+        if not org:
+            raise HTTPException(status_code=404, detail="Organisation not found.")
+
+    new_user = User(
+        id=str(uuid.uuid4()),
+        full_name=payload.full_name,
+        email=payload.email,
+        password_hash=get_password_hash(payload.password),
+        role=payload.role,
+        org_id=payload.org_id or None,
+        phone_in=payload.phone_in or None,
+        preferred_lang=payload.preferred_lang,
+        is_active=True,
+    )
+    db.add(new_user)
+    try:
+        db.commit()
+        db.refresh(new_user)
+        return {"message": f"User '{payload.full_name}' created successfully.", "id": new_user.id}
+    except Exception as exc:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=f"Failed to create user: {exc}")
+
+
+@router.patch("/users/{user_id}/status")
+def toggle_user_status(
+    user_id: str,
+    current_user: dict = Depends(require_role(Role.SUPER_ADMIN)),
+    db: Session = Depends(get_db),
+):
+    """Activate or deactivate a user account."""
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found.")
+    user.is_active = not user.is_active
+    db.commit()
+    action = "activated" if user.is_active else "deactivated"
+    return {"message": f"User '{user.full_name}' {action}."}
+
+
+@router.get("/email-status")
+def email_status(
+    current_user: dict = Depends(require_role(Role.SUPER_ADMIN)),
+):
+    """Returns whether SMTP email is configured or running in emulator mode."""
+    configured = bool(settings.SMTP_USER and settings.SMTP_PASSWORD)
+    return {
+        "configured": configured,
+        "smtp_host": settings.SMTP_HOST if configured else None,
+        "smtp_user": settings.SMTP_USER if configured else None,
+        "from_address": settings.EMAIL_FROM,
+        "mode": "live" if configured else "emulator",
+        "setup_hint": (
+            None if configured else
+            "Add SMTP_USER and SMTP_PASSWORD to your .env file. "
+            "For Gmail: enable 2FA, create an App Password at myaccount.google.com/apppasswords."
+        ),
+    }
+
+
 @router.get("/health")
 def get_system_health(
     current_user: dict = Depends(require_role(Role.SUPER_ADMIN))
@@ -128,9 +243,10 @@ def run_ingestion_jobs(
 
 
 import uuid
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from typing import Optional
 from datetime import datetime, timedelta, timezone
+from app.core.security import get_password_hash
 from app.services.onboarding.templates import OnboardingTemplates
 from app.services.graph import graph_service
 from app.core.database import AlertEvent, RecoveryPlan, AuditLog
