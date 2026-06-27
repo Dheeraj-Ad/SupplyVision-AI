@@ -18,7 +18,18 @@ class AIService:
     def _init_client(self):
         from app.core.config import settings
 
-        if settings.ANTHROPIC_API_KEY:
+        if settings.GEMINI_API_KEY:
+            try:
+                from google import genai as google_genai
+                self._client = google_genai.Client(api_key=settings.GEMINI_API_KEY)
+                self._provider = "gemini"
+                logger.info("AI service: Google Gemini 2.5 Flash client ready.")
+            except ImportError:
+                logger.warning("AI service: google-genai not installed — pip install google-genai")
+            except Exception as exc:
+                logger.warning(f"AI service: Gemini init failed: {exc}")
+
+        if not self._client and settings.ANTHROPIC_API_KEY:
             try:
                 import anthropic
                 self._client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
@@ -26,7 +37,8 @@ class AIService:
                 logger.info("AI service: Anthropic Claude client ready.")
             except ImportError:
                 logger.warning("AI service: anthropic package not installed — pip install anthropic")
-        elif settings.OPENAI_API_KEY:
+
+        if not self._client and settings.OPENAI_API_KEY:
             try:
                 from openai import OpenAI
                 self._client = OpenAI(api_key=settings.OPENAI_API_KEY)
@@ -80,7 +92,10 @@ class AIService:
         )
 
         try:
-            if self._provider == "anthropic":
+            if self._provider == "gemini":
+                resp = self._client.models.generate_content(model="gemini-2.5-flash", contents=prompt)
+                return resp.text.strip()
+            elif self._provider == "anthropic":
                 msg = self._client.messages.create(
                     model="claude-haiku-4-5-20251001",
                     max_tokens=220,
@@ -125,7 +140,10 @@ class AIService:
         )
 
         try:
-            if self._provider == "anthropic":
+            if self._provider == "gemini":
+                resp = self._client.models.generate_content(model="gemini-2.5-flash", contents=prompt)
+                return resp.text.strip()
+            elif self._provider == "anthropic":
                 msg = self._client.messages.create(
                     model="claude-haiku-4-5-20251001",
                     max_tokens=80,
@@ -154,7 +172,16 @@ class AIService:
             return _rule_based_chat(last_msg)
 
         try:
-            if self._provider == "anthropic":
+            if self._provider == "gemini":
+                # Build a single prompt string with system context prepended
+                full_prompt = f"{system}\n\n"
+                for m in messages:
+                    role_label = "User" if m["role"] == "user" else "Assistant"
+                    full_prompt += f"{role_label}: {m['content']}\n"
+                full_prompt += "Assistant:"
+                resp = self._client.models.generate_content(model="gemini-2.5-flash", contents=full_prompt)
+                return resp.text.strip()
+            elif self._provider == "anthropic":
                 resp = self._client.messages.create(
                     model="claude-haiku-4-5-20251001",
                     max_tokens=300,
@@ -191,7 +218,10 @@ class AIService:
             + "\n".join(log)
         )
         try:
-            if self._provider == "anthropic":
+            if self._provider == "gemini":
+                resp = self._client.models.generate_content(model="gemini-2.5-flash", contents=prompt)
+                return resp.text.strip()
+            elif self._provider == "anthropic":
                 msg = self._client.messages.create(
                     model="claude-haiku-4-5-20251001",
                     max_tokens=150,

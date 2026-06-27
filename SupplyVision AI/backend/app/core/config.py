@@ -35,6 +35,9 @@ class Settings(BaseSettings):
     TWILIO_AUTH_TOKEN: Optional[str] = None
     TWILIO_NUMBER: Optional[str] = None
     
+    # Google Gemini (preferred — free tier)
+    GEMINI_API_KEY: Optional[str] = None
+
     # OpenAI / Anthropic Claude
     OPENAI_API_KEY: Optional[str] = None
     ANTHROPIC_API_KEY: Optional[str] = None
