@@ -38,10 +38,10 @@ export default function SimulationLab() {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 lg:space-y-8">
       {/* Header */}
       <div className="border-b border-slate-800 pb-6">
-        <h1 className="text-3xl font-bold tracking-tight text-white flex items-center gap-3">
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-white flex items-center gap-3">
           <PlayCircle className="h-8 w-8 text-accent animate-pulse" />
           <span>Simulation Lab</span>
         </h1>
@@ -66,7 +66,7 @@ export default function SimulationLab() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Simulation Controls Panel */}
-        <div className="bg-[#0f172a] border border-slate-800 p-6 rounded-2xl space-y-6 h-fit">
+        <div className="bg-[#0f172a] border border-slate-800 p-4 lg:p-6 rounded-2xl space-y-4 lg:space-y-6 h-fit">
           <h3 className="text-lg font-bold text-white border-b border-slate-800 pb-2">Simulation Parameters</h3>
           
           <div className="space-y-4">
@@ -139,10 +139,10 @@ export default function SimulationLab() {
         </div>
 
         {/* Simulation Output Panel */}
-        <div className="bg-[#0f172a] border border-slate-800 p-6 rounded-2xl lg:col-span-2 min-h-[400px]">
+        <div className="bg-[#0f172a] border border-slate-800 p-4 lg:p-6 rounded-2xl lg:col-span-2 min-h-[300px] lg:min-h-[400px]">
           {result ? (
             <div className="space-y-6">
-              <div className="flex justify-between items-start border-b border-slate-800 pb-4">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 border-b border-slate-800 pb-4">
                 <div>
                   <span className="text-[10px] font-mono uppercase bg-red-950/20 border border-red-900/30 text-red-400 px-2 py-0.5 rounded">
                     SIMULATION COMPLETED
@@ -153,7 +153,7 @@ export default function SimulationLab() {
                 </div>
                 <div className="text-right">
                   <span className="text-xs font-mono text-slate-500 uppercase block">SIMULATED RISK</span>
-                  <span className="text-2xl font-extrabold text-red-400">{result.simulated_risk_score}/100</span>
+                  <span className="text-2xl lg:text-3xl font-extrabold text-red-400">{result.simulated_risk_score}/100</span>
                 </div>
               </div>
 
@@ -161,13 +161,13 @@ export default function SimulationLab() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-[#090d16] border border-slate-800 p-4 rounded-xl">
                   <span className="text-xs font-mono text-slate-500 block uppercase">Revenue Exposure</span>
-                  <span className="text-2xl font-extrabold text-red-400 mt-1 block">
+                  <span className="text-xl lg:text-2xl font-extrabold text-red-400 mt-1 block">
                     {formatRupee(result.total_exposed_value_inr)}
                   </span>
                 </div>
                 <div className="bg-[#090d16] border border-slate-800 p-4 rounded-xl">
                   <span className="text-xs font-mono text-slate-500 block uppercase">Affected Node Traverses</span>
-                  <span className="text-2xl font-extrabold text-white mt-1 block">
+                  <span className="text-xl lg:text-2xl font-extrabold text-white mt-1 block">
                     {result.affected_nodes.length} Nodes
                   </span>
                 </div>
@@ -223,7 +223,7 @@ export default function SimulationLab() {
               </div>
             </div>
           ) : (
-            <div className="h-full flex flex-col justify-center items-center py-24 text-slate-500 text-center font-mono">
+            <div className="h-full flex flex-col justify-center items-center py-16 lg:py-24 text-slate-500 text-center font-mono">
               <PlayCircle className="h-12 w-12 text-slate-700 mb-3" />
               <p className="text-xs">SIMULATOR READY. CONFIGURE PARAMETERS AND CLICK RUN TO TRAVERSE DOWNSTREAM REVENUE IMPACTS.</p>
             </div>

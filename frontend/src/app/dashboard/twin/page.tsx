@@ -250,7 +250,7 @@ export default function DigitalTwin() {
       {/* Header */}
       <div className="border-b border-slate-800 pb-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-white flex items-center gap-3">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-white flex items-center gap-3">
             <Network className="h-8 w-8 text-accent animate-pulse" />
             Digital Twin Topology
           </h1>
@@ -276,13 +276,13 @@ export default function DigitalTwin() {
         <div className="bg-[#0f172a] border border-slate-800 rounded-2xl lg:col-span-3 flex flex-col overflow-hidden">
           {/* Toolbar */}
           <div className="flex items-center justify-between px-5 pt-4 pb-2 border-b border-slate-800/60">
-            <div className="flex gap-4 text-[10px] font-mono text-slate-400">
-              <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" /> Safe (&lt;30)</div>
-              <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-yellow-500 inline-block" /> Watch (30–64)</div>
-              <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-red-500 inline-block" /> Critical (≥65)</div>
-              <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-indigo-500 inline-block" /> Port</div>
+            <div className="flex flex-wrap gap-2 sm:gap-4 text-[10px] font-mono text-slate-400">
+              <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" /> Safe</div>
+              <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-yellow-500 inline-block" /> Watch</div>
+              <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-red-500 inline-block" /> Critical</div>
+              <div className="hidden sm:flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-indigo-500 inline-block" /> Port</div>
             </div>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1 shrink-0">
               <button onClick={() => setZoom(z => Math.max(z - 0.2, 0.4))} className="p-1.5 rounded border border-slate-800 hover:border-slate-700 text-slate-400 hover:text-white transition-all"><ZoomOut className="h-3.5 w-3.5" /></button>
               <span className="text-[10px] font-mono text-slate-500 w-10 text-center">{Math.round(zoom * 100)}%</span>
               <button onClick={() => setZoom(z => Math.min(z + 0.2, 3))} className="p-1.5 rounded border border-slate-800 hover:border-slate-700 text-slate-400 hover:text-white transition-all"><ZoomIn className="h-3.5 w-3.5" /></button>

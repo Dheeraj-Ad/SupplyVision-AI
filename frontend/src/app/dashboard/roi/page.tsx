@@ -115,7 +115,7 @@ export default function ROIDashboard() {
               </span>
             )}
           </div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">ROI & Business Health Dashboard</h1>
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white tracking-tight">ROI & Business Health Dashboard</h1>
           <p className="text-slate-400 text-sm mt-1">
             Real-time assessment of protection values, mitigation savings, and single source exposure risk.
           </p>
@@ -130,6 +130,22 @@ export default function ROIDashboard() {
         </button>
       </div>
 
+      {/* Headline savings banner */}
+      <div className="bg-gradient-to-r from-emerald-950/30 to-[#0b0f19] border border-emerald-900/30 rounded-2xl p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <p className="text-xs font-mono text-emerald-400 uppercase tracking-widest mb-1">Platform Value Delivered</p>
+          <p className="text-2xl lg:text-3xl font-extrabold text-white">
+            {formatINR(data.expected_savings)} <span className="text-emerald-400">saved</span>
+          </p>
+          <p className="text-xs text-slate-500 mt-1">Net savings from accepted recovery plans</p>
+        </div>
+        <div className="text-right">
+          <p className="text-xs font-mono text-slate-500 uppercase">Return on Investment</p>
+          <p className="text-4xl font-extrabold text-emerald-400">{data.roi_multiple}x</p>
+          <p className="text-xs text-slate-500">per ₹ spent on recovery</p>
+        </div>
+      </div>
+
       {/* Main KPI Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         
@@ -142,7 +158,7 @@ export default function ROIDashboard() {
             </div>
           </div>
           <div className="mt-4">
-            <div className="text-2xl font-bold text-white tracking-tight">
+            <div className="text-xl lg:text-2xl font-bold text-white tracking-tight">
               {formatINR(data.total_protected)}
             </div>
             <p className="text-[10px] text-slate-500 font-mono mt-1">
@@ -160,7 +176,7 @@ export default function ROIDashboard() {
             </div>
           </div>
           <div className="mt-4">
-            <div className="text-2xl font-bold text-white tracking-tight">
+            <div className="text-xl lg:text-2xl font-bold text-emerald-400 tracking-tight">
               {formatINR(data.expected_savings)}
             </div>
             <p className="text-[10px] text-slate-500 font-mono mt-1">
@@ -196,7 +212,7 @@ export default function ROIDashboard() {
             </div>
           </div>
           <div className="mt-4">
-            <div className="text-2xl font-bold text-white tracking-tight">
+            <div className="text-3xl lg:text-4xl font-extrabold text-emerald-400 tracking-tight">
               {data.roi_multiple}x
             </div>
             <p className="text-[10px] text-slate-500 font-mono mt-1">
@@ -260,7 +276,7 @@ export default function ROIDashboard() {
           <div className="space-y-4">
             <h3 className="text-sm font-bold text-white font-mono uppercase tracking-wider">Disruption Exposure Overview</h3>
             
-            <div className="grid grid-cols-3 gap-6">
+            <div className="grid grid-cols-3 gap-3 lg:gap-6">
               
               <div className="bg-[#070b13] border border-slate-800 p-5 rounded-2xl space-y-1">
                 <span className="text-slate-500 font-mono text-[10px] uppercase block">Active Alerts</span>

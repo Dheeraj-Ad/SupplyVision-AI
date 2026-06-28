@@ -99,11 +99,11 @@ export default function SuppliersDirectory() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 lg:space-y-8">
       {/* Header */}
       <div className="border-b border-slate-800 pb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-white flex items-center gap-3">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-white flex items-center gap-3">
             <Users className="h-8 w-8 text-accent" />
             <span>Supplier Directory</span>
           </h1>
@@ -255,6 +255,21 @@ export default function SuppliersDirectory() {
         </div>
       )}
 
+      {/* Summary stats */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {[
+          { label: "Total Suppliers", value: suppliers.length, color: "text-white" },
+          { label: "High Risk", value: suppliers.filter(s => (s.current_risk_score || 0) >= 65).length, color: "text-red-400" },
+          { label: "Single Source", value: suppliers.filter(s => s.is_single_source).length, color: "text-amber-400" },
+          { label: "Optimal", value: suppliers.filter(s => (s.current_risk_score || 0) < 30).length, color: "text-emerald-400" },
+        ].map(stat => (
+          <div key={stat.label} className="bg-[#0f172a] border border-slate-800 rounded-xl p-4 text-center">
+            <div className={`text-2xl font-bold ${stat.color}`}>{stat.value}</div>
+            <div className="text-xs text-slate-500 font-mono mt-1">{stat.label}</div>
+          </div>
+        ))}
+      </div>
+
       {/* Directory Table */}
       <div className="bg-[#0f172a] border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
         <div className="overflow-x-auto">
@@ -274,8 +289,12 @@ export default function SuppliersDirectory() {
             <tbody className="divide-y divide-slate-800/50 text-slate-300">
               {suppliers.length === 0 ? (
                 <tr>
-                  <td colSpan={canDelete ? 8 : 7} className="py-12 text-center text-slate-500 font-mono">
-                    NO REGISTERED SUPPLIERS FOUND.
+                  <td colSpan={canDelete ? 8 : 7} className="py-16 text-center">
+                    <div className="flex flex-col items-center gap-2">
+                      <span className="text-3xl">🏭</span>
+                      <p className="text-slate-300 font-semibold text-sm">No suppliers registered yet</p>
+                      <p className="text-slate-500 text-xs font-mono">Use the "Onboard Supplier" button to add your first supply node.</p>
+                    </div>
                   </td>
                 </tr>
               ) : (

@@ -73,10 +73,10 @@ export default function InventoryManagement() {
   const isThresholdBreached = daysLeft < 8;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 lg:space-y-8">
       {/* Header */}
       <div className="border-b border-slate-800 pb-6">
-        <h1 className="text-3xl font-bold tracking-tight text-white flex items-center gap-3">
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-white flex items-center gap-3">
           <Box className="h-8 w-8 text-accent" />
           <span>Warehouse Safety Buffers</span>
         </h1>
@@ -101,7 +101,7 @@ export default function InventoryManagement() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Warehouse Status Card */}
-        <div className="bg-[#0f172a] border border-slate-800 p-6 rounded-2xl lg:col-span-2 space-y-6">
+        <div className="bg-[#0f172a] border border-slate-800 p-4 lg:p-6 rounded-2xl lg:col-span-2 space-y-6">
           <div className="flex justify-between items-start border-b border-slate-800 pb-4">
             <div className="flex items-center gap-3">
               <span className="p-2 rounded-xl bg-accent/15 border border-accent/20 text-accent">
@@ -125,20 +125,39 @@ export default function InventoryManagement() {
           </div>
 
           {/* Indicators row */}
-          <div className="grid grid-cols-3 gap-4 font-mono text-center">
+          <div className="grid grid-cols-3 gap-2 lg:gap-4 font-mono text-center">
             <div className="bg-[#090d16] border border-slate-850 p-4 rounded-xl">
               <span className="text-[10px] text-slate-500 block uppercase">Physical Units</span>
-              <span className="text-xl font-extrabold text-white mt-1 block">{stockUnits}</span>
+              <span className="text-lg lg:text-xl font-extrabold text-white mt-1 block">{stockUnits}</span>
             </div>
             <div className="bg-[#090d16] border border-slate-850 p-4 rounded-xl">
               <span className="text-[10px] text-slate-500 block uppercase">Daily Burn</span>
-              <span className="text-xl font-extrabold text-slate-300 mt-1 block">{burnRate}/Day</span>
+              <span className="text-lg lg:text-xl font-extrabold text-slate-300 mt-1 block">{burnRate}/Day</span>
             </div>
             <div className="bg-[#090d16] border border-slate-850 p-4 rounded-xl">
               <span className="text-[10px] text-slate-500 block uppercase">Safety Days Left</span>
-              <span className={`text-xl font-extrabold mt-1 block ${isThresholdBreached ? "text-red-400" : "text-emerald-400"}`}>
+              <span className={`text-lg lg:text-xl font-extrabold mt-1 block ${isThresholdBreached ? "text-red-400" : "text-emerald-400"}`}>
                 {daysLeft} Days
               </span>
+            </div>
+          </div>
+
+          {/* Visual runway bar */}
+          <div className="space-y-2">
+            <div className="flex justify-between text-xs font-mono text-slate-500">
+              <span>Stock Runway</span>
+              <span className={isThresholdBreached ? "text-red-400" : "text-emerald-400"}>{daysLeft} days remaining</span>
+            </div>
+            <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
+              <div
+                className={`h-full rounded-full transition-all ${isThresholdBreached ? "bg-red-500" : "bg-emerald-500"}`}
+                style={{ width: `${Math.min(100, (daysLeft / 30) * 100)}%` }}
+              />
+            </div>
+            <div className="flex justify-between text-[10px] font-mono text-slate-600">
+              <span>0 days</span>
+              <span className="text-amber-600">⚠ 8 days (threshold)</span>
+              <span>30 days</span>
             </div>
           </div>
 
@@ -149,7 +168,7 @@ export default function InventoryManagement() {
         </div>
 
         {/* Update physical stock panel */}
-        <div className="bg-[#0f172a] border border-slate-800 p-6 rounded-2xl flex flex-col justify-between">
+        <div className="bg-[#0f172a] border border-slate-800 p-4 lg:p-6 rounded-2xl flex flex-col justify-between">
           <div className="space-y-4">
             <h3 className="text-lg font-bold text-white border-b border-slate-800 pb-2 flex items-center gap-2">
               <Edit3 className="h-4.5 w-4.5 text-accent" />

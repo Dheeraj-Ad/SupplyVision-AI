@@ -123,11 +123,11 @@ export default function CEODashboard() {
         ];
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 lg:space-y-8">
       {/* Top Banner Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-800 pb-6">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-white">Executive Control Center</h1>
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-white">Executive Control Center</h1>
           <p className="text-sm text-slate-400 mt-1">
             Real-time disruption warnings & value-at-risk analysis for{" "}
             <span className="text-slate-200 font-semibold">Your Organisation</span>
@@ -143,7 +143,7 @@ export default function CEODashboard() {
         <div className="absolute inset-0 bg-gradient-to-r from-blue-600/5 via-violet-600/5 to-blue-600/5 pointer-events-none" />
         <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-blue-500/50 to-transparent" />
 
-        <div className="relative p-6 flex flex-col md:flex-row items-start md:items-center gap-5">
+        <div className="relative p-4 lg:p-6 flex flex-col md:flex-row items-start md:items-center gap-5">
           <div className="flex-shrink-0">
             <div className="w-12 h-12 rounded-xl bg-blue-600/20 border border-blue-500/30 flex items-center justify-center">
               {briefingLoading ? (
@@ -204,8 +204,8 @@ export default function CEODashboard() {
       </div>
 
       {/* KPI Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-[#0f172a] border border-slate-800 p-6 rounded-2xl relative overflow-hidden">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+        <div className="bg-[#0f172a] border border-slate-800 p-4 lg:p-6 rounded-2xl relative overflow-hidden">
           <div className="flex justify-between items-start">
             <span className="text-xs font-mono text-slate-400 uppercase tracking-wider">Twin Health Index</span>
             <span className="p-1.5 rounded-lg bg-emerald-950/50 text-emerald-400 border border-emerald-900/50">
@@ -213,14 +213,14 @@ export default function CEODashboard() {
             </span>
           </div>
           <div className="mt-4 flex items-baseline space-x-2">
-            <span className="text-4xl font-extrabold text-white">{healthScore}/100</span>
+            <span className="text-3xl lg:text-4xl font-extrabold text-white">{healthScore}/100</span>
           </div>
           <p className="text-xs text-slate-500 font-mono mt-2 flex items-center gap-1">
             <TrendingUp className="h-3 w-3 text-emerald-400" /> Optimal operating boundaries
           </p>
         </div>
 
-        <div className="bg-[#0f172a] border border-slate-800 p-6 rounded-2xl relative overflow-hidden">
+        <div className="bg-[#0f172a] border border-slate-800 p-4 lg:p-6 rounded-2xl relative overflow-hidden">
           <div className="absolute top-0 left-0 right-0 h-[2px] bg-red-500/30"></div>
           <div className="flex justify-between items-start">
             <span className="text-xs font-mono text-slate-400 uppercase tracking-wider">Revenue At Risk</span>
@@ -229,14 +229,14 @@ export default function CEODashboard() {
             </span>
           </div>
           <div className="mt-4 flex items-baseline space-x-2">
-            <span className="text-3xl font-extrabold text-red-400">{formatRupee(totalRevenueAtRisk)}</span>
+            <span className="text-2xl lg:text-3xl font-extrabold text-red-400">{formatRupee(totalRevenueAtRisk)}</span>
           </div>
           <p className="text-xs text-slate-500 font-mono mt-2 flex items-center gap-1">
             {activeAlerts.length} active node warning signals
           </p>
         </div>
 
-        <div className="bg-[#0f172a] border border-slate-800 p-6 rounded-2xl relative overflow-hidden">
+        <div className="bg-[#0f172a] border border-slate-800 p-4 lg:p-6 rounded-2xl relative overflow-hidden">
           <div className="flex justify-between items-start">
             <span className="text-xs font-mono text-slate-400 uppercase tracking-wider">Savings Opportunity</span>
             <span className="p-1.5 rounded-lg bg-blue-950/50 text-blue-400 border border-blue-900/50">
@@ -244,12 +244,12 @@ export default function CEODashboard() {
             </span>
           </div>
           <div className="mt-4 flex items-baseline space-x-2">
-            <span className="text-3xl font-extrabold text-blue-400">{formatRupee(savingsOpportunities)}</span>
+            <span className="text-2xl lg:text-3xl font-extrabold text-blue-400">{formatRupee(savingsOpportunities)}</span>
           </div>
           <p className="text-xs text-slate-500 font-mono mt-2">Confidence weight: 85% avg</p>
         </div>
 
-        <div className="bg-[#0f172a] border border-slate-800 p-6 rounded-2xl relative overflow-hidden">
+        <div className="bg-[#0f172a] border border-slate-800 p-4 lg:p-6 rounded-2xl relative overflow-hidden">
           <div className="flex justify-between items-start">
             <span className="text-xs font-mono text-slate-400 uppercase tracking-wider">Platform Annual ROI</span>
             <span className="p-1.5 rounded-lg bg-indigo-950/50 text-indigo-400 border border-indigo-900/50">
@@ -281,7 +281,7 @@ export default function CEODashboard() {
               <span>Avg: {averageRisk}/100</span>
             </div>
           </div>
-          <div className="h-72 w-full pt-4">
+          <div className="h-56 sm:h-72 w-full pt-4">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={displayChart}>
                 <defs>

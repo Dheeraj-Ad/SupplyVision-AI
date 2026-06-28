@@ -141,10 +141,10 @@ export default function AlertCenter() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 lg:space-y-8">
       {/* Header */}
       <div className="border-b border-slate-800 pb-6">
-        <h1 className="text-3xl font-bold tracking-tight text-white flex items-center gap-3">
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-white flex items-center gap-3">
           <BellRing className="h-8 w-8 text-accent" />
           <span>Alert Center</span>
         </h1>
@@ -173,8 +173,10 @@ export default function AlertCenter() {
           <h3 className="text-lg font-bold text-white border-b border-slate-800 pb-2">Active Notifications</h3>
           <div className="space-y-3">
             {alerts.length === 0 ? (
-              <div className="py-12 text-center text-slate-500 font-mono text-xs">
-                NO ACTIVE WARNINGS.
+              <div className="py-12 text-center space-y-2">
+                <div className="text-2xl mb-2">✓</div>
+                <p className="text-emerald-400 font-semibold text-sm">Supply chain is healthy</p>
+                <p className="text-slate-500 font-mono text-xs">No active disruptions detected — all nodes operating normally.</p>
               </div>
             ) : (
               alerts.map((a) => {
@@ -454,8 +456,12 @@ export default function AlertCenter() {
             )}
           </div>
         ) : (
-          <div className="lg:col-span-2 bg-[#0f172a] border border-slate-800 p-8 rounded-2xl text-center text-slate-500 font-mono text-xs py-36">
-            SELECT A WARNING CARD TO TRAVERSE THE INTEGRATION SCHEMAS AND RECOVERY CONTINGENCIES.
+          <div className="lg:col-span-2 bg-[#0f172a] border border-slate-800 p-8 rounded-2xl flex flex-col items-center justify-center py-24 text-center">
+            <div className="w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center mb-4">
+              <span className="text-slate-500 text-xl">📋</span>
+            </div>
+            <p className="text-slate-300 font-semibold text-sm mb-1">Select an Alert to Inspect</p>
+            <p className="text-slate-500 font-mono text-xs max-w-xs">Click any alert card on the left to view risk details, AI analysis, and recovery options.</p>
           </div>
         )}
       </div>
