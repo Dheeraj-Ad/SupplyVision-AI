@@ -20,7 +20,8 @@ import {
   TrendingUp,
   History,
   Sparkles,
-  X
+  X,
+  CreditCard,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -42,8 +43,9 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   // Super Admin view is isolated
   if (role === "super_admin") {
     menuItems.push(
-      { name: "Tenant Center", path: "/admin", icon: Users },
-      { name: "System Health", path: "/admin/health", icon: ShieldAlert }
+      { name: "Tenant Center",   path: "/admin",                icon: Users },
+      { name: "Subscriptions",   path: "/admin/subscriptions",  icon: CreditCard },
+      { name: "System Health",   path: "/admin/health",         icon: ShieldAlert }
     );
   } else {
     // Normal Tenant Roles

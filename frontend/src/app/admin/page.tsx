@@ -4,7 +4,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import { request } from "@/lib/api";
 import {
   ShieldCheck, ShieldAlert, CheckCircle2, Building2,
-  Users, Activity, Plus, X, RefreshCw, MailCheck,
+  Users, Activity, Plus, X, RefreshCw,
   MailX, Eye, EyeOff, UserPlus,
 } from "lucide-react";
 
@@ -203,21 +203,13 @@ export default function AdminConsole() {
         </div>
       )}
 
-      {/* ── Email status banner ── */}
-      {emailStatus && (
-        <div className={`flex items-center gap-3 px-4 py-3 rounded-xl border text-sm ${
-          emailStatus.configured
-            ? "bg-emerald-950/10 border-emerald-900/30 text-emerald-300"
-            : "bg-amber-950/10 border-amber-900/30 text-amber-300"
-        }`}>
-          {emailStatus.configured
-            ? <MailCheck className="h-4 w-4 shrink-0" />
-            : <MailX className="h-4 w-4 shrink-0" />}
+      {/* ── Email status banner (only shown when NOT configured) ── */}
+      {emailStatus && !emailStatus.configured && (
+        <div className="flex items-center gap-3 px-4 py-3 rounded-xl border bg-amber-950/10 border-amber-900/30 text-amber-300 text-sm">
+          <MailX className="h-4 w-4 shrink-0" />
           <span>
-            <strong>Email notifications: </strong>
-            {emailStatus.configured
-              ? `Live via ${emailStatus.smtp_user}`
-              : "Emulator mode — add SMTP_USER + SMTP_PASSWORD to .env to send real emails (Gmail App Password works)"}
+            <strong>Email not configured — </strong>
+            add SMTP_USER + SMTP_PASSWORD to .env to enable email notifications.
           </span>
         </div>
       )}

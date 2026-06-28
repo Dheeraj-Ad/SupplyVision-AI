@@ -466,6 +466,115 @@ export default function LandingPage() {
           </div>
         </div>
 
+        {/* ── PRICING ───────────────────────────────────────────────────────── */}
+        <div id="pricing" className="scroll-mt-24 mb-24">
+          <div className="text-center mb-12">
+            <p className="text-[10px] font-mono tracking-[0.2em] uppercase text-sky-400 mb-3">Pricing</p>
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-balance mb-3">
+              Simple, transparent pricing
+            </h2>
+            <p className="text-[#4E6B8A] text-sm max-w-lg mx-auto">
+              Start free. Scale as your supply chain grows. No hidden fees, no SAP-sized bills.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 items-stretch">
+            {/* Basic */}
+            <div className="bg-[#080F1C] border border-[#162840] rounded-2xl p-7 flex flex-col">
+              <div className="mb-5">
+                <div className="text-[10px] font-mono uppercase tracking-widest text-slate-500 mb-2">Basic</div>
+                <div className="text-4xl font-extrabold text-white">Free</div>
+                <div className="text-xs text-[#4E6B8A] mt-1">Forever free · No credit card needed</div>
+              </div>
+              <ul className="space-y-2.5 flex-1 mb-7">
+                {[
+                  "Up to 25 suppliers monitored",
+                  "AI risk scoring & briefings",
+                  "Digital twin visualisation",
+                  "Email disruption alerts",
+                  "Simulation lab access",
+                ].map(f => (
+                  <li key={f} className="flex items-start gap-2 text-xs text-[#4E6B8A]">
+                    <Check className="h-3.5 w-3.5 text-sky-500 mt-0.5 shrink-0" />
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <a href="#login"
+                className="block text-center py-2.5 rounded-xl border border-[#1E3A5F] hover:border-sky-700/60 text-sky-400 hover:text-sky-300 text-sm font-semibold transition-colors">
+                Get Started Free
+              </a>
+            </div>
+
+            {/* Premium — highlighted */}
+            <div className="relative bg-gradient-to-b from-sky-950/40 to-[#080F1C] border border-sky-700/50 rounded-2xl p-7 flex flex-col shadow-lg shadow-sky-900/20">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                <span className="bg-gradient-to-r from-sky-500 to-blue-600 text-white text-[10px] font-bold px-3 py-1 rounded-full font-mono tracking-wider uppercase shadow">
+                  Most Popular
+                </span>
+              </div>
+              <div className="mb-5">
+                <div className="text-[10px] font-mono uppercase tracking-widest text-sky-400 mb-2">Premium</div>
+                <div className="flex items-end gap-2">
+                  <span className="text-4xl font-extrabold text-white">₹1,000</span>
+                  <span className="text-sm text-[#4E6B8A] mb-1">/ month</span>
+                </div>
+                <div className="text-xs text-[#4E6B8A] mt-1">$11 USD · Billed monthly</div>
+              </div>
+              <ul className="space-y-2.5 flex-1 mb-7">
+                {[
+                  "Up to 100 suppliers monitored",
+                  "Everything in Basic",
+                  "WhatsApp disruption alerts",
+                  "ROI analytics dashboard",
+                  "Recovery plan approvals",
+                  "Multi-user team access",
+                ].map(f => (
+                  <li key={f} className="flex items-start gap-2 text-xs text-[#8BACC8]">
+                    <Check className="h-3.5 w-3.5 text-sky-400 mt-0.5 shrink-0" />
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <a href="#login"
+                className="block text-center py-2.5 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white text-sm font-semibold transition-all shadow-md shadow-sky-900/40">
+                Start Premium
+              </a>
+            </div>
+
+            {/* Ultra */}
+            <div className="bg-gradient-to-b from-amber-950/20 to-[#080F1C] border border-amber-800/40 rounded-2xl p-7 flex flex-col">
+              <div className="mb-5">
+                <div className="text-[10px] font-mono uppercase tracking-widest text-amber-400 mb-2">Ultra</div>
+                <div className="flex items-end gap-2">
+                  <span className="text-4xl font-extrabold text-white">₹4,999</span>
+                  <span className="text-sm text-[#4E6B8A] mb-1">/ month</span>
+                </div>
+                <div className="text-xs text-[#4E6B8A] mt-1">$59 USD · Unlimited everything</div>
+              </div>
+              <ul className="space-y-2.5 flex-1 mb-7">
+                {[
+                  "Unlimited suppliers",
+                  "Unlimited AI usage",
+                  "Everything in Premium",
+                  "Priority signal ingestion",
+                  "Custom onboarding session",
+                  "Dedicated support channel",
+                ].map(f => (
+                  <li key={f} className="flex items-start gap-2 text-xs text-[#4E6B8A]">
+                    <Check className="h-3.5 w-3.5 text-amber-500 mt-0.5 shrink-0" />
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <a href="#login"
+                className="block text-center py-2.5 rounded-xl border border-amber-700/40 hover:border-amber-600/60 text-amber-300 hover:text-amber-200 text-sm font-semibold transition-colors">
+                Contact Sales
+              </a>
+            </div>
+          </div>
+        </div>
+
         {/* ── LOGIN ─────────────────────────────────────────────────────────── */}
         <div ref={loginRef} id="login" className="scroll-mt-24 mb-24">
           <div className="text-center mb-10">

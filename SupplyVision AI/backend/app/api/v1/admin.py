@@ -80,10 +80,40 @@ def update_organisation_limits(
     org = db.query(Organisation).filter(Organisation.id == org_id).first()
     if not org:
         raise HTTPException(status_code=404, detail="Organisation not found")
-        
+
     org.max_suppliers = max_suppliers
     db.commit()
     return {"message": f"Organisation supplier limit updated to {max_suppliers}."}
+
+
+PLAN_CONFIG = {
+    "basic":      {"max_suppliers": 25},
+    "premium":    {"max_suppliers": 100},
+    "ultra":      {"max_suppliers": 99999},
+    # legacy aliases kept for compatibility
+    "starter":    {"max_suppliers": 25},
+    "growth":     {"max_suppliers": 100},
+    "enterprise": {"max_suppliers": 99999},
+}
+
+@router.post("/orgs/{org_id}/plan")
+def update_organisation_plan(
+    org_id: str,
+    plan: str,
+    current_user: dict = Depends(require_role(Role.SUPER_ADMIN)),
+    db: Session = Depends(get_db)
+):
+    """Change an organisation's subscription plan and auto-adjust supplier limit."""
+    cfg = PLAN_CONFIG.get(plan.lower())
+    if not cfg:
+        raise HTTPException(status_code=400, detail=f"Unknown plan '{plan}'. Valid: basic, premium, ultra.")
+    org = db.query(Organisation).filter(Organisation.id == org_id).first()
+    if not org:
+        raise HTTPException(status_code=404, detail="Organisation not found.")
+    org.plan = plan.lower()
+    org.max_suppliers = cfg["max_suppliers"]
+    db.commit()
+    return {"message": f"Plan updated to '{plan}' with {cfg['max_suppliers']} supplier limit.", "plan": plan, "max_suppliers": cfg["max_suppliers"]}
 
 
 # ── User Management ───────────────────────────────────────────────────────────
