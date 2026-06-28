@@ -209,6 +209,33 @@ def send_weekly_digest_email(
     return _smtp_send(to_addresses, subject, html, plain)
 
 
+def send_test_email(to_address: str, user_name: str) -> bool:
+    """Send a quick SMTP connectivity test email."""
+    subject = "SupplyVision AI — SMTP Connection Test"
+    html = f"""
+<!DOCTYPE html><html><body style="margin:0;padding:0;background:#0A0F1E;font-family:system-ui,sans-serif;">
+<div style="max-width:600px;margin:32px auto;background:#0C1929;border-radius:16px;overflow:hidden;border:1px solid #162840;">
+  <div style="padding:28px 32px;border-bottom:1px solid #162840;">
+    <p style="font-size:11px;font-family:monospace;letter-spacing:0.15em;color:#10B981;text-transform:uppercase;margin:0 0 8px;">✅ SMTP Test Successful</p>
+    <h1 style="margin:0;font-size:20px;font-weight:800;color:#E2EAF4;">Email configuration is working</h1>
+  </div>
+  <div style="padding:24px 32px;">
+    <p style="font-size:14px;color:#8BA8C0;line-height:1.7;margin:0 0 16px;">
+      Hi <strong style="color:#E2EAF4;">{user_name}</strong>, this test confirms your SMTP connection to SupplyVision AI is active.
+    </p>
+    <p style="font-size:13px;color:#4E6B8A;line-height:1.6;margin:0;">
+      You will receive alert digests, risk reports, and AI conversation summaries at this address.
+    </p>
+  </div>
+  <div style="padding:16px 32px;border-top:1px solid #162840;text-align:center;">
+    <p style="font-size:11px;font-family:monospace;color:#2A4060;margin:0;">SupplyVision AI &mdash; Your Intelligent Supply Chain Co-pilot</p>
+  </div>
+</div>
+</body></html>"""
+    plain = f"SMTP Test — SupplyVision AI\n\nHi {user_name}, your email configuration is working correctly. You will receive alerts at this address."
+    return _smtp_send([to_address], subject, html, plain)
+
+
 def send_chatbot_digest_email(
     to_address: str,
     user_name: str,

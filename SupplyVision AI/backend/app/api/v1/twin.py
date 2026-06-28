@@ -9,6 +9,7 @@ from app.services.graph import graph_service
 from app.services.signals import signals_service
 from app.services.recovery_engine import recovery_engine
 from app.services.notifications.whatsapp import send_risk_alert_whatsapp, send_recovery_recommendation_whatsapp
+from app.services.ingestion.weather import fetch_openweather_data
 
 router = APIRouter()
 
@@ -306,3 +307,13 @@ def patch_node_properties(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No updatable fields provided.")
 
     return {"node_id": node_id, "updated": updated, "message": "Node properties persisted to digital twin."}
+
+
+@router.get("/weather")
+def get_weather_for_city(
+    city: str,
+    current_user: dict = Depends(require_role(Role.AUDITOR)),
+):
+    """Fetch live weather data for a supply chain node's city (OpenWeatherMap or mock fallback)."""
+    data = fetch_openweather_data(city)
+    return data

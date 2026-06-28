@@ -15,6 +15,9 @@ import {
   Maximize2,
   Play,
   AlertTriangle,
+  Cloud,
+  Thermometer,
+  Wind,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -140,6 +143,8 @@ export default function DigitalTwin() {
   const [explanation, setExplanation] = useState<string | null>(null);
   const [explainLoading, setExplainLoading] = useState(false);
   const [aiPowered, setAiPowered] = useState(false);
+  const [weatherData, setWeatherData] = useState<any>(null);
+  const [weatherLoading, setWeatherLoading] = useState(false);
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const isPanning = useRef(false);
@@ -183,9 +188,24 @@ export default function DigitalTwin() {
     }
   }, []);
 
+  const fetchWeather = useCallback(async (city: string) => {
+    setWeatherData(null);
+    setWeatherLoading(true);
+    try {
+      const res = await request("GET", `/twin/weather?city=${encodeURIComponent(city)}`);
+      setWeatherData(res);
+    } catch {
+      setWeatherData(null);
+    } finally {
+      setWeatherLoading(false);
+    }
+  }, []);
+
   const handleNodeClick = (node: Node) => {
     setSelectedNode(node);
     fetchExplanation(node.id);
+    if (node.city) fetchWeather(node.city);
+    else setWeatherData(null);
   };
 
   const onSvgMouseDown = (e: React.MouseEvent<SVGSVGElement>) => {
@@ -390,6 +410,53 @@ export default function DigitalTwin() {
                     </p>
                   )}
                 </div>
+
+                {/* Weather Widget */}
+                {selectedNode.city && (
+                  <div className="bg-[#060c18] border border-slate-800/60 rounded-xl p-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-1.5">
+                        <Cloud className="h-3.5 w-3.5 text-sky-400" />
+                        <span className="text-[10px] font-mono text-sky-400 uppercase tracking-wider">Live Weather · {selectedNode.city}</span>
+                      </div>
+                      <button
+                        onClick={() => fetchWeather(selectedNode.city!)}
+                        disabled={weatherLoading}
+                        className="p-1 rounded text-slate-500 hover:text-slate-300 disabled:opacity-40"
+                      >
+                        <RefreshCw className={`h-3 w-3 ${weatherLoading ? "animate-spin" : ""}`} />
+                      </button>
+                    </div>
+                    {weatherLoading ? (
+                      <div className="flex gap-2 items-center">
+                        <div className="h-3 bg-slate-800 rounded animate-pulse w-full" />
+                      </div>
+                    ) : weatherData && !weatherData.error ? (
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Thermometer className="h-3.5 w-3.5 text-orange-400" />
+                          <span className="text-xs font-semibold text-white">{weatherData.temp !== undefined ? `${weatherData.temp}°C` : "N/A"}</span>
+                          <span className="text-[10px] text-slate-400 font-mono">{(weatherData.weather || "").split("(")[0].trim()}</span>
+                        </div>
+                        <span className={`text-[10px] font-mono font-semibold px-2 py-0.5 rounded border ${
+                          weatherData.severity >= 4 ? "text-red-400 bg-red-950/30 border-red-900/40" :
+                          weatherData.severity >= 3 ? "text-amber-400 bg-amber-950/30 border-amber-900/40" :
+                          weatherData.severity >= 2 ? "text-yellow-400 bg-yellow-950/30 border-yellow-900/40" :
+                          "text-emerald-400 bg-emerald-950/30 border-emerald-900/40"
+                        }`}>
+                          {weatherData.severity >= 4 ? "⚠ SEVERE" : weatherData.severity >= 3 ? "⚠ HIGH" : weatherData.severity >= 2 ? "MODERATE" : "CLEAR"}
+                        </span>
+                      </div>
+                    ) : (
+                      <p className="text-[10px] text-slate-500 italic font-mono">Click refresh to load weather</p>
+                    )}
+                    {weatherData && !weatherData.error && weatherData.severity >= 3 && (
+                      <p className="text-[10px] text-amber-400/80 mt-1.5 font-mono">
+                        ⚡ Adverse weather may disrupt this node — check Alert Center
+                      </p>
+                    )}
+                  </div>
+                )}
 
                 <div className="bg-[#090d16] border border-slate-800 p-3 rounded-xl">
                   <div className="flex justify-between items-center text-[10px] text-slate-400 font-mono mb-1">
