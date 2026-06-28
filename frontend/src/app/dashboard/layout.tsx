@@ -3,9 +3,11 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
+import dynamic from "next/dynamic";
 import Sidebar from "@/components/sidebar";
-import Chatbot from "@/components/chatbot";
 import { Menu } from "lucide-react";
+
+const Chatbot = dynamic(() => import("@/components/chatbot"), { ssr: false });
 
 export default function DashboardLayout({
   children,

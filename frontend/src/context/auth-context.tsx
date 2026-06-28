@@ -47,6 +47,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     async function loadSession() {
+      // Fast path: read localStorage first — zero network wait for returning users
+      const token = localStorage.getItem("access_token");
+      if (token) {
+        const claims = parseJwt(token);
+        if (claims && claims.exp * 1000 > Date.now()) {
+          // Valid JWT — show dashboard immediately, validate with server in background
+          setUser({
+            user_id: claims.sub,
+            email: claims.email,
+            role: claims.role,
+            org_id: claims.org_id,
+            full_name: claims.full_name || claims.email.split("@")[0],
+            preferred_lang: claims.preferred_lang || "en",
+          });
+          setIsLoading(false);
+
+          // Background validation — silently refresh user data or clear stale token
+          request("GET", "/auth/me")
+            .then((me) => {
+              setUser({
+                user_id: me.id,
+                email: me.email,
+                role: me.role,
+                org_id: me.org_id,
+                full_name: me.full_name,
+                preferred_lang: me.preferred_lang,
+              });
+            })
+            .catch(() => {
+              localStorage.removeItem("access_token");
+              setUser(null);
+            });
+          return;
+        }
+        // Expired token — remove it before hitting the network
+        localStorage.removeItem("access_token");
+      }
+
+      // Slow path: no local token, try cookie-based auth (first visit / incognito)
       try {
         const me = await request("GET", "/auth/me");
         setUser({
@@ -57,24 +96,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           full_name: me.full_name,
           preferred_lang: me.preferred_lang,
         });
-      } catch (err) {
-        console.warn("Could not fetch active profile from cookies, falling back to storage: ", err);
-        const token = localStorage.getItem("access_token");
-        if (token) {
-          const claims = parseJwt(token);
-          if (claims && claims.exp * 1000 > Date.now()) {
-            setUser({
-              user_id: claims.sub,
-              email: claims.email,
-              role: claims.role,
-              org_id: claims.org_id,
-              full_name: claims.full_name || claims.email.split('@')[0],
-              preferred_lang: claims.preferred_lang || "en",
-            });
-          } else {
-            localStorage.removeItem("access_token");
-          }
-        }
+      } catch {
+        // Not authenticated — stay on landing page
       } finally {
         setIsLoading(false);
       }
