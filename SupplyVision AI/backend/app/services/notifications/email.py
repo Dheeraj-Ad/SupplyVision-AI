@@ -25,20 +25,25 @@ def _smtp_send(to_addresses: List[str], subject: str, html: str, plain: str = ""
         return True
 
     try:
+        smtp_user = (settings.SMTP_USER or "").strip()
+        smtp_pass = (settings.SMTP_PASSWORD or "").strip()
+        # Gmail requires FROM = authenticated sender — use SMTP_USER as FROM
+        from_addr = smtp_user or settings.EMAIL_FROM
+
         msg = MIMEMultipart("alternative")
         msg["Subject"] = subject
-        msg["From"] = settings.EMAIL_FROM
+        msg["From"] = from_addr
         msg["To"] = ", ".join(to_addresses)
 
         if plain:
             msg.attach(MIMEText(plain, "plain", "utf-8"))
         msg.attach(MIMEText(html, "html", "utf-8"))
 
-        with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT, timeout=10) as server:
+        with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT, timeout=15) as server:
             server.ehlo()
             server.starttls()
-            server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
-            server.sendmail(settings.EMAIL_FROM, to_addresses, msg.as_string())
+            server.login(smtp_user, smtp_pass)
+            server.sendmail(from_addr, to_addresses, msg.as_string())
 
         logger.info(f"Email sent: '{subject}' -> {to_addresses}")
         return True

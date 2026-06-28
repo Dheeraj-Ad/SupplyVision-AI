@@ -207,7 +207,16 @@ def chat_message(
         user_content += f"\n\n[Context: I fetched live weather for you]{weather_section}"
     messages.append({"role": "user", "content": user_content})
 
-    reply = ai_service.chat_completion(system_prompt, messages)
+    reply = ai_service.chat_completion(
+        system_prompt,
+        messages,
+        fallback_context={
+            "open_alerts": open_alerts,
+            "supplier_count": supplier_count,
+            "top_risky_suppliers": top_risky_suppliers,
+            "weather_data": weather_data,
+        },
+    )
 
     return ChatResponse(
         reply=reply,

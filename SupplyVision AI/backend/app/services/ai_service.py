@@ -166,7 +166,12 @@ class AIService:
             logger.error(f"AI enhance_recovery failed: {exc}")
             return option.get("description", "")
 
-    def chat_completion(self, system: str, messages: List[Dict[str, Any]]) -> str:
+    def chat_completion(
+        self,
+        system: str,
+        messages: List[Dict[str, Any]],
+        fallback_context: Dict[str, Any] = None,
+    ) -> str:
         """
         Multi-turn chat completion for the in-app chatbot.
         messages is a list of {"role": "user"|"assistant", "content": str}.
@@ -174,22 +179,35 @@ class AIService:
         """
         if not self.available:
             last_msg = messages[-1]["content"] if messages else ""
-            return _rule_based_chat(last_msg)
+            return _rule_based_chat(last_msg, fallback_context)
 
         try:
             if self._provider == "gemini":
-                # Build a single prompt string with system context prepended
+                try:
+                    from google.genai import types as genai_types
+                    gen_config = genai_types.GenerateContentConfig(
+                        temperature=0.85,
+                        max_output_tokens=800,
+                        top_p=0.95,
+                    )
+                except Exception:
+                    gen_config = None
+
                 full_prompt = f"{system}\n\n"
                 for m in messages:
                     role_label = "User" if m["role"] == "user" else "Assistant"
                     full_prompt += f"{role_label}: {m['content']}\n"
                 full_prompt += "Assistant:"
-                resp = self._client.models.generate_content(model="gemini-2.5-flash", contents=full_prompt)
+
+                kwargs: Dict[str, Any] = {"model": "gemini-2.5-flash", "contents": full_prompt}
+                if gen_config:
+                    kwargs["config"] = gen_config
+                resp = self._client.models.generate_content(**kwargs)
                 return resp.text.strip()
             elif self._provider == "anthropic":
                 resp = self._client.messages.create(
                     model="claude-haiku-4-5-20251001",
-                    max_tokens=300,
+                    max_tokens=600,
                     system=system,
                     messages=messages,
                 )
@@ -198,14 +216,15 @@ class AIService:
                 full = [{"role": "system", "content": system}] + messages
                 resp = self._client.chat.completions.create(
                     model="gpt-4o-mini",
-                    max_tokens=300,
+                    max_tokens=600,
+                    temperature=0.85,
                     messages=full,
                 )
                 return resp.choices[0].message.content.strip()
         except Exception as exc:
             logger.error(f"chat_completion failed: {exc}")
             last_msg = messages[-1]["content"] if messages else ""
-            return _rule_based_chat(last_msg)
+            return _rule_based_chat(last_msg, fallback_context)
 
     def summarise_pipeline_run(self, log: List[str], alerts_created: int) -> str:
         """
@@ -247,43 +266,167 @@ class AIService:
 
 # ── Rule-based fallbacks ─────────────────────────────────────────────────────
 
-def _rule_based_chat(message: str) -> str:
+def _rule_based_chat(message: str, context: Dict[str, Any] = None) -> str:
+    ctx = context or {}
+    open_alerts = ctx.get("open_alerts", 0)
+    supplier_count = ctx.get("supplier_count", 0)
+    top_suppliers = ctx.get("top_risky_suppliers", [])
+    weather = ctx.get("weather_data")
     msg = message.lower()
-    if any(w in msg for w in ["risk", "score", "danger"]):
-        return ("Risk scores are computed from weather (40%), supplier dependency (25%), "
-                "port congestion (20%), and inventory levels (15%). "
-                "Open the Alert Center to see live breakdowns for each node.")
+    if any(w in msg for w in ["risk", "score", "danger", "critical", "highest"]):
+        if top_suppliers:
+            sup_lines = "\n".join(
+                f"• **{s['name']}** — score {s['score']}/100"
+                + (" 🔴 CRITICAL" if s['score'] >= 65 else " 🟡 ELEVATED" if s['score'] >= 30 else " 🟢")
+                + (f", {s['city']}" if s.get('city') else "")
+                + (" [single-source ⚠]" if s.get('single_source') else "")
+                for s in top_suppliers
+            )
+            return (
+                f"Your highest-risk suppliers right now:\n{sup_lines}\n\n"
+                "Risk scores come from 4 live signals:\n"
+                "• **Weather** 40% · **Dependency** 25% · **Port Congestion** 20% · **Inventory** 15%\n\n"
+                "Scores > 65 are Critical — go to the **Alert Center** immediately."
+            )
+        return (
+            "Risk scores are computed from 4 live signals:\n"
+            "• **Weather** (40%) — cyclone, flood, monsoon from OpenWeatherMap & IMD\n"
+            "• **Supplier Dependency** (25%) — single-source exposure and lead time\n"
+            "• **Port Congestion** (20%) — JNPT, Chennai, Mundra utilisation\n"
+            "• **Inventory** (15%) — days-to-zero burn rate at warehouses\n\n"
+            "Scores above **65 = Critical**, 30–65 = Elevated, below 30 = Optimal."
+        )
     if any(w in msg for w in ["supplier", "vendor", "source"]):
-        return ("You can view and manage all suppliers from the Suppliers page. "
-                "Each card shows risk score, city, lead time, and revenue exposure. "
-                "Use the simulation lab to test what happens if a supplier goes down.")
-    if any(w in msg for w in ["alert", "disruption", "warning"]):
-        return ("Open alerts are in the Alert Center. "
-                "Click any alert to see the AI risk breakdown and ranked recovery options. "
-                "You can approve a plan directly from the page or by replying to the WhatsApp message.")
-    if any(w in msg for w in ["recover", "plan", "option", "mitigat"]):
-        return ("Recovery plans are auto-generated for each alert with 2–3 ranked options. "
-                "Each option shows estimated cost, savings in rupees, and lead time. "
-                "Approve directly in the Alert Center or reply 'approve 1' via WhatsApp.")
+        base = (
+            f"You have **{supplier_count} supplier(s)** configured in your digital twin.\n\n"
+            if supplier_count else ""
+        )
+        return (
+            base +
+            "Each supplier card shows live risk score, city, lead time, and ₹ revenue exposure.\n\n"
+            "• **Green** = low risk (< 30)\n"
+            "• **Yellow** = elevated risk (30–65)\n"
+            "• **Red** = critical (> 65) — act immediately\n\n"
+            "Use the **Simulation Lab** to model what happens if any supplier goes offline."
+        )
+    if any(w in msg for w in ["alert", "disruption", "warning", "open"]):
+        if open_alerts > 0:
+            return (
+                f"You have **{open_alerts} open alert(s)** requiring attention right now.\n\n"
+                "Each alert in the **Alert Center** shows:\n"
+                "• Composite risk score with full factor breakdown\n"
+                "• ₹ value of orders at risk\n"
+                "• 2–3 ranked AI-generated recovery options\n\n"
+                "Go to the Alert Center to review and approve a recovery plan, "
+                "or reply **'approve 1'** on WhatsApp."
+            )
+        return (
+            "Good news — no open alerts right now. Your supply chain looks healthy.\n\n"
+            "The Alert Center monitors:\n"
+            "• Supplier risk scores crossing thresholds\n"
+            "• Port congestion spikes\n"
+            "• Extreme weather events\n"
+            "• Inventory running critically low\n\n"
+            "You'll be notified automatically by email and WhatsApp when risks emerge."
+        )
+    if any(w in msg for w in ["recover", "plan", "option", "mitigat", "action"]):
+        return (
+            "Recovery plans are auto-generated for every alert with ranked options:\n"
+            "• **Option 1** — fastest to implement (switch to alternate supplier)\n"
+            "• **Option 2** — cost-optimised (pre-order buffer stock)\n"
+            "• **Option 3** — long-term resilience (dual-sourcing contract)\n\n"
+            "Each option shows expected savings in ₹ and implementation lead time.\n"
+            "Approve in the Alert Center or send 'approve 1' on WhatsApp."
+        )
     if any(w in msg for w in ["simulat", "what if", "scenario", "cyclone", "flood", "strike"]):
-        return ("Use the Simulation Lab to model any scenario — cyclone, flood, or port strike — "
-                "at severity 1–5 on any supply chain node. "
-                "The real risk engine computes the impact and shows affected orders and recovery options.")
-    if any(w in msg for w in ["whatsapp", "sms", "message", "notify"]):
-        return ("SupplyVision AI sends WhatsApp alerts to registered numbers when a risk is detected. "
-                "Managers can reply 'approve 1', 'status', or 'reject' directly from WhatsApp "
-                "to take action without opening the dashboard.")
-    if any(w in msg for w in ["port", "jnpt", "chennai", "mundra", "congestion"]):
-        return ("Port congestion data for JNPT, Chennai, and Mundra is refreshed every hour. "
-                "Utilisation above 75% adds to the port risk component of your composite score. "
-                "Strike conditions during monsoon season trigger the highest severity flags.")
-    if any(w in msg for w in ["hello", "hi", "help", "start", "what can"]):
-        return ("I'm SupplyVision AI, your supply chain intelligence assistant. "
-                "Ask me about risk scores, open alerts, recovery plans, simulation scenarios, "
-                "or how to interpret any metric on the dashboard.")
-    return ("I can help you understand supply chain risks, interpret alerts, "
-            "suggest recovery actions, or explain any dashboard metric. "
-            "What would you like to know?")
+        return (
+            "The **Simulation Lab** lets you model disruption scenarios at severity 1–5:\n"
+            "• **Cyclone / Flood** — weather-driven disruption at any supplier or port\n"
+            "• **Port Strike** — congestion spike at JNPT, Chennai, or Mundra\n"
+            "• **Supplier Failure** — complete loss of a node\n\n"
+            "The real risk engine scores the impact and generates recovery options.\n"
+            "You can also **inject** the simulation as a live alert to test your team's response."
+        )
+    if any(w in msg for w in ["weather", "rain", "flood", "cyclone", "temperature"]):
+        return (
+            "SupplyVision AI pulls live weather from **OpenWeatherMap** every hour for key cities.\n\n"
+            "Severity mapping:\n"
+            "• Severity 1 = Clear / Light cloud (no impact)\n"
+            "• Severity 2 = Moderate rain (watch)\n"
+            "• Severity 3 = Heavy rain / Thunderstorm (elevated risk)\n"
+            "• Severity 4 = Cyclone / Flood warning (critical — act now)\n\n"
+            "Open the **Digital Twin** and click any node to see live weather for that city."
+        )
+    if any(w in msg for w in ["whatsapp", "sms", "message", "notify", "phone"]):
+        return (
+            "SupplyVision AI sends **WhatsApp alerts** automatically when risk scores cross thresholds.\n\n"
+            "Your team can reply directly from WhatsApp:\n"
+            "• **'approve 1'** — activate recovery option 1\n"
+            "• **'status'** — get current supply chain status\n"
+            "• **'reject'** — dismiss the alert\n\n"
+            "No need to log in — manage supply chain disruptions from your phone."
+        )
+    if any(w in msg for w in ["port", "jnpt", "mundra", "congestion", "shipping"]):
+        return (
+            "Port congestion is monitored for **JNPT, Chennai, and Mundra** ports every hour.\n\n"
+            "Thresholds:\n"
+            "• < 65% utilisation = Normal\n"
+            "• 65–80% = Elevated congestion risk\n"
+            "• > 80% = Critical — delays likely, routes affected\n\n"
+            "Strike conditions during monsoon season trigger **Severity 5** flags.\n"
+            "Check the Digital Twin Port nodes for real-time congestion status."
+        )
+    if any(w in msg for w in ["inventory", "stock", "warehouse", "burn"]):
+        return (
+            "Inventory risk is calculated from:\n"
+            "• **Current stock** (units on hand at your warehouses)\n"
+            "• **Daily burn rate** (units consumed per day)\n"
+            "• **Days-to-zero** = stock ÷ burn rate\n\n"
+            "Warning thresholds:\n"
+            "• < 8 days → Critical (red)\n"
+            "• 8–15 days → Elevated (yellow)\n"
+            "• > 15 days → Safe (green)\n\n"
+            "Update stock levels in the **Inventory** page or Digital Twin."
+        )
+    if any(w in msg for w in ["roi", "revenue", "profit", "saving", "cost", "rupee", "₹"]):
+        return (
+            "The **ROI Analytics** page shows your supply chain financial exposure:\n\n"
+            "• Total ₹ at risk across all open alerts\n"
+            "• Projected savings from approved recovery plans\n"
+            "• Historical disruption cost timeline\n"
+            "• Return on AI investment vs manual monitoring\n\n"
+            "SupplyVision AI typically identifies 15–30% cost reduction opportunities."
+        )
+    if any(w in msg for w in ["hello", "hi", "hey", "help", "start", "what can", "how"]):
+        return (
+            "I'm **SupplyVision AI** — your intelligent supply chain co-pilot for Indian SMEs.\n\n"
+            "I can help you with:\n"
+            "• Risk scores and what's driving them\n"
+            "• Open alerts and recovery options\n"
+            "• Weather impact on your supply chain\n"
+            "• Supplier analysis and simulation scenarios\n"
+            "• Email digests and WhatsApp alerts\n\n"
+            "Type **'test email'** to verify your email setup, or ask me anything!"
+        )
+    if any(w in msg for w in ["twin", "graph", "network", "node", "map"]):
+        return (
+            "The **Digital Twin** is a live graph of your entire supply chain:\n\n"
+            "• 🏭 **Suppliers** — coloured by risk score\n"
+            "• ⚓ **Ports** — showing congestion level\n"
+            "• 📦 **Warehouses** — with stock levels and burn rate\n"
+            "• 👤 **Customers** — downstream demand nodes\n\n"
+            "Click any node to see AI risk analysis, live weather, and stock data.\n"
+            "Drag nodes to rearrange the layout."
+        )
+    return (
+        "I can help with supply chain risks, alerts, suppliers, weather impact, and recovery plans.\n\n"
+        "Try asking:\n"
+        "• 'What are my highest risk suppliers?'\n"
+        "• 'Check weather in Chennai'\n"
+        "• 'How do I read risk scores?'\n"
+        "• 'Send test email'\n"
+        "• 'How does the simulation work?'"
+    )
 
 
 def _rule_based_explain_risk(
