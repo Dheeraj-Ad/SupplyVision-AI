@@ -291,6 +291,24 @@ export default function LandingPage() {
           </div>
         </div>
 
+        {/* ── TRUST METRICS BANNER ─────────────────────────────────────────────── */}
+        <div className="mb-24 bg-gradient-to-r from-[#080F1C] via-[#0C1929] to-[#080F1C] border border-[#162840] rounded-2xl p-8">
+          <p className="text-center text-[10px] font-mono tracking-[0.2em] uppercase text-sky-400 mb-6">Platform Impact</p>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 text-center">
+            {[
+              { value: "₹2.3Cr", label: "Avg disruption cost prevented per year", color: "text-emerald-400" },
+              { value: "15+", label: "Live risk signals monitored per supplier", color: "text-sky-400" },
+              { value: "4", label: "AI agents running every hour automatically", color: "text-violet-400" },
+              { value: "<2h", label: "Average time from disruption to alert", color: "text-amber-400" },
+            ].map(({ value, label, color }) => (
+              <div key={label}>
+                <div className={`text-3xl sm:text-4xl font-extrabold font-mono ${color} mb-2`}>{value}</div>
+                <div className="text-xs text-[#4E6B8A] leading-snug">{label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* ── AUTO-NOTIFICATIONS SHOWCASE ──────────────────────────────────── */}
         <div className="mb-24">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
@@ -396,7 +414,7 @@ export default function LandingPage() {
               { n: "03", icon: <Activity />, tag: "Impact", title: "Map the blast radius", desc: "Which production lines are affected, which orders are at risk, delay in days." },
               { n: "04", icon: <GitBranch />, tag: "Recovery", title: "Notify + recover", desc: "3 ranked plans generated. Email + WhatsApp sent. One reply to approve and close the loop." },
             ].map(({ n, icon, tag, title, desc }) => (
-              <div key={n} className="bg-[#080F1C] border border-[#162840] hover:border-sky-900/50 rounded-2xl p-5 transition-all group">
+              <div key={n} className="bg-[#080F1C] border border-[#162840] hover:border-sky-900/50 hover:scale-[1.02] hover:-translate-y-0.5 rounded-2xl p-5 transition-all group">
                 <div className="flex items-center justify-between mb-4">
                   <span className="text-[10px] font-mono text-[#2A4060]">{n}</span>
                   <div className="w-8 h-8 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400 [&>svg]:h-4 [&>svg]:w-4 group-hover:bg-sky-500/20 transition-colors">
@@ -419,21 +437,21 @@ export default function LandingPage() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {[
-              { icon: <Zap />, n: "01", title: "Claude AI + Fallback", desc: "Anthropic Claude primary. OpenAI fallback. Rule-based backup. Always works." },
-              { icon: <GitBranch />, n: "02", title: "LangGraph Pipeline", desc: "4 compiled agents run sequentially every hour for every active org." },
-              { icon: <BarChart3 />, n: "03", title: "Live Risk Scores", desc: "Real signals — not manual entry. AI explains the score in plain English." },
-              { icon: <Truck />, n: "04", title: "Port Congestion Model", desc: "Seasonal model for JNPT, Chennai, Mundra ports with strike & monsoon data." },
-              { icon: <MessageSquare />, n: "05", title: "WhatsApp Approvals", desc: "Alerts to phone. Reply 'approve 1' to activate a plan — no app needed." },
-              { icon: <ShieldCheck />, n: "06", title: "Tier Limits Enforced", desc: "Starter = 25 suppliers. Growth = 75. Enterprise = unlimited. Auto-blocked." },
-              { icon: <Package />, n: "07", title: "Simulation Engine", desc: "Real risk engine under the hood — simulate a flood and see true impact." },
-              { icon: <Send />, n: "08", title: "Auto Email + WhatsApp", desc: "Every alert fires email to managers + WhatsApp to all registered numbers." },
+              { icon: <Zap />, n: "01", title: "Gemini AI — Always On", desc: "Google Gemini 2.5 Flash primary. OpenAI GPT-4o fallback. Rule-based backup. Never goes dark." },
+              { icon: <GitBranch />, n: "02", title: "4-Agent AI Pipeline", desc: "LangGraph agents run every hour — intelligence, risk scoring, blast-radius mapping, and recovery." },
+              { icon: <BarChart3 />, n: "03", title: "Live Risk Scores", desc: "Real signals, not manual entry. Composite 0–100 score with plain-English AI explanation." },
+              { icon: <Truck />, n: "04", title: "Port Congestion Model", desc: "Seasonal model for JNPT, Chennai, Mundra — strike conditions and monsoon spikes included." },
+              { icon: <MessageSquare />, n: "05", title: "WhatsApp Approvals", desc: "Alerts to your phone. Reply 'approve 1' to activate a recovery plan — no app needed." },
+              { icon: <ShieldCheck />, n: "06", title: "Multi-Tenant Platform", desc: "Isolated orgs, role-based access, plan-based supplier limits. Enterprise-ready from day one." },
+              { icon: <Package />, n: "07", title: "Scenario Simulation", desc: "Simulate floods, port strikes, supplier failures. Real risk engine scores every what-if." },
+              { icon: <Send />, n: "08", title: "Auto-Notification Hub", desc: "Every alert triggers email + WhatsApp instantly. No manual monitoring needed." },
             ].map(({ icon, n, title, desc }) => (
-              <div key={title} className="bg-[#080F1C] border border-[#162840] hover:border-sky-900/50 rounded-2xl p-5 transition-all group">
+              <div key={title} className="bg-[#080F1C] border border-[#162840] hover:border-sky-900/50 hover:scale-[1.02] hover:-translate-y-0.5 rounded-2xl p-5 transition-all group">
                 <div className="flex items-center gap-2 mb-3">
                   <div className="w-7 h-7 rounded-lg bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400 [&>svg]:h-3.5 [&>svg]:w-3.5 group-hover:bg-sky-500/20 transition-colors">
                     {icon}
                   </div>
-                  <span className="text-[9px] font-mono text-[#2A4060]">GAP {n}</span>
+                  <span className="text-[9px] font-mono text-[#2A4060]">{n}</span>
                 </div>
                 <h3 className="font-semibold text-sm mb-1.5 text-[#C8DFF0]">{title}</h3>
                 <p className="text-xs text-[#3A5A7A] leading-relaxed">{desc}</p>
@@ -663,10 +681,21 @@ export default function LandingPage() {
       </div>
 
       {/* ── FOOTER ───────────────────────────────────────────────────────────── */}
-      <footer className="border-t border-white/5 py-8 text-center">
-        <p className="text-xs text-[#1A3050] font-mono">
-          SupplyVision AI — Decision Intelligence for Indian Manufacturing SMEs
-        </p>
+      <footer className="border-t border-white/5 py-10 text-center">
+        <div className="max-w-6xl mx-auto px-5">
+          <div className="flex items-center justify-center gap-2.5 mb-3">
+            <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center">
+              <span className="text-white text-xs font-bold">S</span>
+            </div>
+            <span className="font-bold text-[#2A4060] text-sm">SupplyVision AI</span>
+          </div>
+          <p className="text-xs text-[#1A3050] font-mono">
+            Decision Intelligence for Indian Manufacturing SMEs · Textiles · Auto · Pharma
+          </p>
+          <p className="text-[10px] text-[#0D1E30] font-mono mt-2">
+            © 2025 SupplyVision AI. Built for Bharat.
+          </p>
+        </div>
       </footer>
 
     </div>
